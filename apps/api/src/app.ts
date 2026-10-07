@@ -88,7 +88,6 @@ export function createApp({ db, config, logger }: AppDeps): Express {
   school.use('/lookups', lookupsRouter(db));
   school.use('/files', fileUploadRouter(db));
   registerModules({ school, student }, { db, config });
-  });
   app.use('/api/schools/:schoolId', requireAuth, schoolScope(db), school);
   app.use('/api/students/:studentId', requireAuth, studentScope(db), student);
 
