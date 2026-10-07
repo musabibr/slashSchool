@@ -6,12 +6,7 @@ import { requireRole, schoolOf } from '../../lib/context';
 import { conflict } from '../../lib/errors';
 import { parse, zId } from '../../lib/validate';
 import { createRegulationSchema, updateRegulationSchema } from './schemas';
-import {
-  compareRegulations,
-  findRegulationInSchool,
-  incidentCounts,
-  type RegulationDto,
-} from './service';
+import { compareRegulations, findRegulationInSchool, incidentCounts, type RegulationDto } from './service';
 
 /** Case- and space-insensitive comparison key for codes and titles. */
 const normalized = (column: Column) => sql`lower(btrim(${column}))`;

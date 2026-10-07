@@ -403,7 +403,9 @@ describe('student evaluation (S17 / T9)', () => {
   it('validates input', async () => {
     const agent = await t.loginAs(t.fx.users.teacher.phone);
     const base = { classSectionId: t.fx.class5a.id, subjectId: t.fx.math.id, date: PAST };
-    const badRating = await agent.put(url()).send({ ...base, items: [{ studentId: t.fx.students.s1.id, rating: 'good' }] });
+    const badRating = await agent
+      .put(url())
+      .send({ ...base, items: [{ studentId: t.fx.students.s1.id, rating: 'good' }] });
     expect(badRating.status).toBe(400);
     expect(badRating.body.error.details[0].path).toBe('items.0.rating');
     const commentOnly = await agent

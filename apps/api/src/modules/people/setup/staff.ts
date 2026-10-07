@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { and, asc, eq, gte, inArray } from 'drizzle-orm';
+import { and, asc, eq, gte, inArray, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { isValidPhone, normalizePhone, STAFF_ROLES, type Role } from '@slash/shared';
 import type { Db } from '../../../db/client';
@@ -211,6 +211,7 @@ export function staffRouter(db: Db) {
     if (!roles.includes(role)) throw notFound('الموظف غير موجود');
 
     const today = schoolToday(school);
+    const year = await currentAcademicYear(db, school.id);
     await db.transaction(async (tx) => {
       await tx
         .delete(memberships)
@@ -221,12 +222,18 @@ export function staffRouter(db: Db) {
         await tx
           .delete(teachingAssignments)
           .where(and(eq(teachingAssignments.schoolId, school.id), eq(teachingAssignments.teacherId, userId)));
-        // Periods of current and future years stay in the timetable, without a teacher; past years keep history.
+        // Periods of the current (and any future) year stay in the timetable without a teacher;
+        // past years keep their history.
         const openClasses = tx
           .select({ id: classSections.id })
           .from(classSections)
           .innerJoin(academicYears, eq(academicYears.id, classSections.academicYearId))
-          .where(and(eq(classSections.schoolId, school.id), gte(academicYears.endsOn, today)));
+          .where(
+            and(
+              eq(classSections.schoolId, school.id),
+              or(gte(academicYears.endsOn, today), year ? eq(academicYears.id, year.id) : undefined),
+            ),
+          );
         await tx
           .update(timetableSlots)
           .set({ teacherId: null })

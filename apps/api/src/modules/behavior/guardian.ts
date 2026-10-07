@@ -50,9 +50,10 @@ export function guardianRouter(db: Db) {
       db
         .select({
           violations: sql<number>`count(*)`.mapWith(Number),
-          penalties: sql<number>`count(*) filter (where btrim(coalesce(${behaviorIncidents.penalty}, '')) <> '')`.mapWith(
-            Number,
-          ),
+          penalties:
+            sql<number>`count(*) filter (where btrim(coalesce(${behaviorIncidents.penalty}, '')) <> '')`.mapWith(
+              Number,
+            ),
         })
         .from(behaviorIncidents)
         .where(ofStudent),

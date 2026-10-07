@@ -3,6 +3,8 @@ import { staffAnnouncementsRouter } from './announcements';
 import { staffCalendarRouter } from './calendar';
 import { guardianCommsRouter } from './guardian';
 
+export { seedCommsDemo } from './demo';
+
 /**
  * Announcements, the academic calendar and the guardian home summary (P3 badges, P15, P16, director pages).
  *  - staff:   /api/schools/:schoolId/announcements, /api/schools/:schoolId/calendar

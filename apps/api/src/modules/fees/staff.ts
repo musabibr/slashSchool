@@ -47,7 +47,7 @@ const scheduleSnapshot = (list: Array<{ amount: number; dueDate: string }>) =>
  *   PATCH  /plans/:id                     → plan (installments replace the schedule)
  *   DELETE /plans/:id                     → { ok } (409 when payments exist)
  *   POST   /plans/:id/assign              → { assigned, skipped }
- *   GET    /students/:studentId           → { student, accounts, totals, payments }
+ *   GET    /students/:studentId           → { today, student, accounts, totals, payments }
  *   POST   /students/:studentId/notice    → 201 { announcementId, body, contacts }
  *   PATCH  /student-fees/:id              → { discount } (audited)
  *   DELETE /student-fees/:id              → { ok } (409 when payments exist)
@@ -161,12 +161,14 @@ export function staffFeesRouter(db: Db) {
     const school = schoolOf(req);
     const studentId = parse(zId, req.params.studentId);
     await findStudent(db, school.id, studentId);
+    const today = schoolToday(school);
     const [accounts, paymentList, infos] = await Promise.all([
-      loadAccounts(db, school.id, schoolToday(school), studentId),
+      loadAccounts(db, school.id, today, studentId),
       studentPayments(db, school.id, studentId),
       studentInfos(db, school.id, [studentId]),
     ]);
     res.json({
+      today,
       student: infos.get(studentId),
       accounts: accounts.map(({ studentFeeId, planId, planName, discount, account }) => ({
         studentFeeId,

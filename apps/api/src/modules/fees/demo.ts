@@ -86,9 +86,11 @@ export async function seedFeesDemo(db: Db, opts: { today: string }): Promise<voi
         .insert(s.feePlans)
         .values({ schoolId: school.id, academicYearId: year.id, gradeLevelId: grade.id, name: `رسوم ${grade.name}` })
         .returning({ id: s.feePlans.id });
-      await db.insert(s.planInstallments).values(
-        DEMO_INSTALLMENTS.map((amount, k) => ({ feePlanId: plan.id, seq: k + 1, amount, dueDate: dueDates[k] })),
-      );
+      await db
+        .insert(s.planInstallments)
+        .values(
+          DEMO_INSTALLMENTS.map((amount, k) => ({ feePlanId: plan.id, seq: k + 1, amount, dueDate: dueDates[k] })),
+        );
       planByGrade.set(grade.id, plan.id);
     }
 

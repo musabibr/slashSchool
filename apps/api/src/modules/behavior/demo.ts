@@ -17,10 +17,20 @@ const REGULATIONS: Array<{ key: RegulationKey; code: string; title: string; defa
   { key: 'late', code: '1', title: 'التأخر عن الطابور الصباحي', defaultPenalty: 'تنبيه شفهي' },
   { key: 'uniform', code: '2', title: 'عدم الالتزام بالزي المدرسي', defaultPenalty: 'إنذار أول وإخطار ولي الأمر' },
   { key: 'books', code: '3', title: 'عدم إحضار الكتب والأدوات المدرسية', defaultPenalty: null },
-  { key: 'phone', code: '4', title: 'إحضار الهاتف الجوال إلى المدرسة', defaultPenalty: 'مصادرة الهاتف وتسليمه لولي الأمر' },
+  {
+    key: 'phone',
+    code: '4',
+    title: 'إحضار الهاتف الجوال إلى المدرسة',
+    defaultPenalty: 'مصادرة الهاتف وتسليمه لولي الأمر',
+  },
   { key: 'absence', code: '5', title: 'الغياب بدون عذر', defaultPenalty: 'استدعاء ولي الأمر' },
   { key: 'chaos', code: '6', title: 'إثارة الفوضى داخل الفصل', defaultPenalty: 'إنذار كتابي' },
-  { key: 'fight', code: '7', title: 'الاعتداء على زميل', defaultPenalty: 'الإيقاف عن الدراسة يومين واستدعاء ولي الأمر' },
+  {
+    key: 'fight',
+    code: '7',
+    title: 'الاعتداء على زميل',
+    defaultPenalty: 'الإيقاف عن الدراسة يومين واستدعاء ولي الأمر',
+  },
   { key: 'damage', code: '8', title: 'إتلاف ممتلكات المدرسة', defaultPenalty: 'إصلاح التلف على نفقة ولي الأمر' },
 ];
 
@@ -51,6 +61,8 @@ const CLASSMATE_INCIDENTS: PlannedIncident[] = [
 
 const EVALUATION_DAYS = 8;
 const SUBJECTS_PER_DAY = 2;
+/** Rows per INSERT, well below Postgres' 65,535 bind-parameter limit. */
+const INSERT_CHUNK = 500;
 
 const COMMENTS: Record<EvaluationRating, Array<string | null>> = {
   excellent: ['مشاركة ممتازة وحل جميع التمارين', null, 'أحسنت، استمر على هذا المستوى'],
@@ -93,8 +105,14 @@ export async function seedBehaviorDemo(db: Db, opts: { today?: string } = {}): P
   schools.sort((a, b) => schoolCodes.indexOf(a.code) - schoolCodes.indexOf(b.code));
 
   const phoneOf = (role: string) => DEMO_ACCOUNTS.find((a) => a.role === role)?.phone ?? '';
-  const [supervisor] = await db.select().from(s.users).where(eq(s.users.phone, phoneOf('supervisor')));
-  const [guardian] = await db.select().from(s.users).where(eq(s.users.phone, phoneOf('guardian')));
+  const [supervisor] = await db
+    .select()
+    .from(s.users)
+    .where(eq(s.users.phone, phoneOf('supervisor')));
+  const [guardian] = await db
+    .select()
+    .from(s.users)
+    .where(eq(s.users.phone, phoneOf('guardian')));
 
   const children = guardian
     ? (
@@ -134,7 +152,12 @@ export async function seedBehaviorDemo(db: Db, opts: { today?: string } = {}): P
     const regs = await db
       .insert(s.regulations)
       .values(
-        REGULATIONS.map((r) => ({ schoolId: school.id, code: r.code, title: r.title, defaultPenalty: r.defaultPenalty })),
+        REGULATIONS.map((r) => ({
+          schoolId: school.id,
+          code: r.code,
+          title: r.title,
+          defaultPenalty: r.defaultPenalty,
+        })),
       )
       .returning();
     const regByKey = new Map(REGULATIONS.map((r, i) => [r.key, regs[i]]));
@@ -178,7 +201,12 @@ export async function seedBehaviorDemo(db: Db, opts: { today?: string } = {}): P
     if (incidents.length) await db.insert(s.behaviorIncidents).values(incidents);
 
     // Teacher evaluations for the past school days (today is left for the demo user to fill in).
-    const classes = await db.select().from(s.classSections).where(eq(s.classSections.schoolId, school.id));
+    const classes = await db
+      .select()
+      .from(s.classSections)
+      .where(
+        and(eq(s.classSections.schoolId, school.id), year ? eq(s.classSections.academicYearId, year.id) : undefined),
+      );
     const assignments = await db
       .select({
         classSectionId: s.teachingAssignments.classSectionId,
@@ -234,6 +262,11 @@ export async function seedBehaviorDemo(db: Db, opts: { today?: string } = {}): P
         }
       }
     }
-    if (rows.length) await db.insert(s.evaluations).values(rows).onConflictDoNothing();
+    for (let i = 0; i < rows.length; i += INSERT_CHUNK) {
+      await db
+        .insert(s.evaluations)
+        .values(rows.slice(i, i + INSERT_CHUNK))
+        .onConflictDoNothing();
+    }
   }
 }

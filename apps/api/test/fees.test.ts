@@ -62,12 +62,13 @@ describe('fee plans', () => {
       studentCount: 0,
       hasPayments: false,
     });
-    expect(res.body.installments.map((i: { seq: number; amount: number; dueDate: string }) => [i.seq, i.amount, i.dueDate]))
-      .toEqual([
-        [1, 300_000, dues[0]],
-        [2, 150_000, dues[1]],
-        [3, 150_000, dues[2]],
-      ]);
+    expect(
+      res.body.installments.map((i: { seq: number; amount: number; dueDate: string }) => [i.seq, i.amount, i.dueDate]),
+    ).toEqual([
+      [1, 300_000, dues[0]],
+      [2, 150_000, dues[1]],
+      [3, 150_000, dues[2]],
+    ]);
     planId = res.body.id;
   });
 
@@ -229,7 +230,12 @@ describe('payments and student accounts', () => {
     const agent = await t.loginAs(t.fx.users.admin.phone);
     const res = await agent.get(`${base()}/students/${t.fx.students.s1.id}`);
     expect(res.status).toBe(200);
-    expect(res.body.student).toMatchObject({ code: 'S-1', classLabel: 'الصف الخامس - أ', gradeLevelId: t.fx.grade5.id });
+    expect(res.body.today).toBe(today);
+    expect(res.body.student).toMatchObject({
+      code: 'S-1',
+      classLabel: 'الصف الخامس - أ',
+      gradeLevelId: t.fx.grade5.id,
+    });
     expect(res.body.accounts).toHaveLength(1);
     const [acc] = res.body.accounts;
     expect(acc).toMatchObject({ studentFeeId: s1Fee, planId, planName: 'رسوم الصف الخامس', discount: 0 });
@@ -305,7 +311,9 @@ describe('payments and student accounts', () => {
     expect(logs).toHaveLength(1);
 
     // Back to the original schedule for the scenarios below.
-    const back = await agent.patch(`${base()}/plans/${planId}`).send({ name: 'رسوم الصف الخامس', installments: schedule() });
+    const back = await agent
+      .patch(`${base()}/plans/${planId}`)
+      .send({ name: 'رسوم الصف الخامس', installments: schedule() });
     expect(back.body.installments).toHaveLength(3);
   });
 
@@ -410,10 +418,7 @@ describe('guardian view (P9)', () => {
     const agent = await t.loginAs(t.fx.users.supervisor.phone);
     const res = await agent.get(guardianUrl(t.fx.students.s1.id));
     expect(res.status).toBe(200);
-    const cursors = await t.db
-      .select()
-      .from(s.readCursors)
-      .where(eq(s.readCursors.userId, t.fx.users.supervisor.id));
+    const cursors = await t.db.select().from(s.readCursors).where(eq(s.readCursors.userId, t.fx.users.supervisor.id));
     expect(cursors).toHaveLength(0);
   });
 });
@@ -542,8 +547,11 @@ describe('authorization', () => {
       expect((await agent.get(`${base()}/plans`)).status).toBe(403);
       expect((await agent.get(`${base()}/overview`)).status).toBe(403);
       expect(
-        (await agent.post(`${base()}/student-fees/${s1Fee}/payments`).send({ amount: 1, paidAt: today, method: 'cash' }))
-          .status,
+        (
+          await agent
+            .post(`${base()}/student-fees/${s1Fee}/payments`)
+            .send({ amount: 1, paidAt: today, method: 'cash' })
+        ).status,
       ).toBe(403);
     }
   });
@@ -592,11 +600,12 @@ describe('demo data', () => {
     await seedFeesDemo(d.db, { today: day });
     const agent = await d.loginAs(d.fx.users.admin.phone);
     const plans = (await agent.get(`/api/schools/${d.fx.schoolA.id}/fees/plans`)).body;
-    expect(plans.map((p: { name: string; total: number; studentCount: number }) => [p.name, p.total, p.studentCount]))
-      .toEqual([
-        ['رسوم الصف الخامس', 600_000, 4],
-        ['رسوم الصف السادس', 600_000, 0],
-      ]);
+    expect(
+      plans.map((p: { name: string; total: number; studentCount: number }) => [p.name, p.total, p.studentCount]),
+    ).toEqual([
+      ['رسوم الصف الخامس', 600_000, 4],
+      ['رسوم الصف السادس', 600_000, 0],
+    ]);
     const overview = (await agent.get(`/api/schools/${d.fx.schoolA.id}/fees/overview`)).body;
     expect(overview.collected).toBeGreaterThan(0);
     expect(overview.studentsWithArrears).toBeGreaterThan(0);

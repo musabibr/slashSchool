@@ -174,20 +174,24 @@ export async function assertGradeLevelInSchool(db: Db, schoolId: string, gradeLe
  * A class a student can be placed in: of this school, of the current academic year and (when given)
  * of the chosen grade level.
  */
-export async function assertPlacementClass(db: Db, schoolId: string, classSectionId: string, gradeLevelId?: string) {
+export async function assertPlacementClass(
+  db: Db,
+  schoolId: string,
+  classSectionId: string,
+  gradeLevelId?: string,
+  path = 'classSectionId',
+) {
   const [cls] = await db
     .select()
     .from(classSections)
     .where(and(eq(classSections.id, classSectionId), eq(classSections.schoolId, schoolId)));
   if (!cls) throw notFound('الفصل غير موجود');
   if (gradeLevelId && cls.gradeLevelId !== gradeLevelId) {
-    throw badRequest('بيانات غير صالحة', [
-      { path: 'classSectionId', message: 'الفصل لا ينتمي للسنة الدراسية المختارة' },
-    ]);
+    throw badRequest('بيانات غير صالحة', [{ path, message: 'الفصل لا ينتمي للسنة الدراسية المختارة' }]);
   }
   const year = await currentAcademicYear(db, schoolId);
   if (!year || cls.academicYearId !== year.id) {
-    throw badRequest('بيانات غير صالحة', [{ path: 'classSectionId', message: 'الفصل لا ينتمي للعام الدراسي الحالي' }]);
+    throw badRequest('بيانات غير صالحة', [{ path, message: 'الفصل لا ينتمي للعام الدراسي الحالي' }]);
   }
   return cls;
 }
@@ -280,10 +284,11 @@ export function chunks<T>(items: T[], size: number): T[][] {
 
 // ───────────────────────────── Queries ─────────────────────────────
 
-const classGrade = alias(gradeLevels, 'class_grade');
+/** The grade level of the student's class (the student's own grade level is joined as `gradeLevels`). */
+export const classGrade = alias(gradeLevels, 'class_grade');
 
 /** "الصف الخامس - ب" from the class's own grade level. */
-const classLabelSql = sql<string | null>`case when ${classSections.id} is null then null else ${classGrade.name} || ' - ' || ${classSections.name} end`;
+export const classLabelSql = sql<string | null>`case when ${classSections.id} is null then null else ${classGrade.name} || ' - ' || ${classSections.name} end`;
 
 /** Numeric part of the code, for ordering S-2 before S-10. */
 const codeNumberSql = sql`coalesce(substring(${students.code} from '[0-9]+$')::bigint, 0)`;
