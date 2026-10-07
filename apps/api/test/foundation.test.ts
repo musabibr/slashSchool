@@ -183,3 +183,17 @@ describe('demo login', () => {
     expect((await agent.post('/api/public/demo/login').send({ role: 'root' })).status).toBe(400);
   });
 });
+
+describe('student summary', () => {
+  it('serves the guardian home header for guardians and staff, not strangers', async () => {
+    const guardian = await t.loginAs(t.fx.users.guardian.phone);
+    const res = await guardian.get(`/api/students/${t.fx.students.s1.id}/summary`);
+    expect(res.status).toBe(200);
+    expect(res.body.student.classLabel).toBe('الصف الخامس - أ');
+    expect(Object.keys(res.body.badges)).toHaveLength(9);
+    const other = await t.loginAs(t.fx.users.guardian2.phone);
+    expect((await other.get(`/api/students/${t.fx.students.s1.id}/summary`)).status).toBe(403);
+    const adminB = await t.loginAs(t.fx.users.adminB.phone);
+    expect((await adminB.get(`/api/students/${t.fx.students.s1.id}/summary`)).status).toBe(403);
+  });
+});
