@@ -1,7 +1,14 @@
 import type { ReactNode } from 'react';
-import { ActionIcon, Badge, Button, Group, Modal, Paper, Select, Stack, Text, Tooltip } from '@mantine/core';
+import { ActionIcon, Badge, Box, Button, Group, Modal, Paper, Select, Stack, Text, Tooltip } from '@mantine/core';
 import { IconTrash } from '@tabler/icons-react';
-import { EVALUATION_RATING_LABELS, EVALUATION_RATINGS, formatDate, type EvaluationRating } from '@slash/shared';
+import {
+  EVALUATION_RATING_LABELS,
+  EVALUATION_RATINGS,
+  formatDate,
+  WEEKDAY_LABELS,
+  weekdayOf,
+  type EvaluationRating,
+} from '@slash/shared';
 import type { Regulation, StudentEvaluation } from './api';
 
 /** Badge colors of the evaluation ratings (P14, S17). */
@@ -16,7 +23,7 @@ export const RATING_OPTIONS = EVALUATION_RATINGS.map((r) => ({ value: r, label: 
 
 export function RatingBadge({ rating }: { rating: EvaluationRating }) {
   return (
-    <Badge color={RATING_COLORS[rating]} variant="light" size="lg" radius="sm" style={{ flexShrink: 0 }}>
+    <Badge color={RATING_COLORS[rating]} variant="light" size="md" radius="sm" style={{ flexShrink: 0 }}>
       {EVALUATION_RATING_LABELS[rating]}
     </Badge>
   );
@@ -105,29 +112,49 @@ export function IncidentCard({
   );
 }
 
-/** "تقييم المعلمين" entries: subject + date, the rating badge, the comment and the teacher. */
+/** "تقييم المعلمين": one card per day (newest first) listing each subject's rating, comment and teacher. */
 export function EvaluationList({ items }: { items: StudentEvaluation[] }) {
+  const days: Array<{ date: string; items: StudentEvaluation[] }> = [];
+  for (const e of items) {
+    const last = days[days.length - 1];
+    if (last?.date === e.date) last.items.push(e);
+    else days.push({ date: e.date, items: [e] });
+  }
   return (
     <Stack gap="xs">
-      {items.map((e, i) => (
-        <Paper key={`${e.date}:${e.subjectName}:${i}`} withBorder radius="md" p="sm">
-          <Group justify="space-between" wrap="nowrap" gap="xs" align="flex-start">
-            <Stack gap={0} style={{ minWidth: 0 }}>
-              <Text fw={700} size="sm" truncate>
-                {e.subjectName}
-              </Text>
-              <Text size="xs" c="dimmed">
-                {formatDate(e.date)}
-                {e.teacherName ? ` — ${e.teacherName}` : ''}
-              </Text>
-            </Stack>
-            <RatingBadge rating={e.rating} />
-          </Group>
-          {e.comment && (
-            <Text size="sm" mt={6} style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
-              {e.comment}
-            </Text>
-          )}
+      {days.map((day) => (
+        <Paper key={day.date} withBorder radius="md" p="sm">
+          <Text size="xs" c="dimmed" fw={600} mb={6}>
+            {WEEKDAY_LABELS[weekdayOf(day.date)]} {formatDate(day.date)}
+          </Text>
+          <Stack gap={0}>
+            {day.items.map((e, i) => (
+              <Box
+                key={`${e.subjectName}:${i}`}
+                py={6}
+                style={i ? { borderTop: '1px solid var(--mantine-color-gray-2)' } : undefined}
+              >
+                <Group justify="space-between" wrap="nowrap" gap="xs">
+                  <Stack gap={0} style={{ minWidth: 0 }}>
+                    <Text fw={700} size="sm" truncate>
+                      {e.subjectName}
+                    </Text>
+                    {e.teacherName && (
+                      <Text size="xs" c="dimmed" truncate>
+                        {e.teacherName}
+                      </Text>
+                    )}
+                  </Stack>
+                  <RatingBadge rating={e.rating} />
+                </Group>
+                {e.comment && (
+                  <Text size="sm" mt={4} style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                    {e.comment}
+                  </Text>
+                )}
+              </Box>
+            ))}
+          </Stack>
         </Paper>
       ))}
     </Stack>

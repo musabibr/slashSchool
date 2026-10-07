@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Badge, Button, Group, Pagination, Paper, Select, Stack, Table, Text, TextInput } from '@mantine/core';
-import { useDebouncedValue } from '@mantine/hooks';
+import { useDebouncedCallback } from '@mantine/hooks';
 import { IconFileImport, IconSearch, IconUserPlus } from '@tabler/icons-react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { formatDate, type StudentStatus } from '@slash/shared';
@@ -29,8 +29,8 @@ export function AdminStudentsPage() {
   const filter = params.get('f');
   const status = (params.get('status') as StudentStatus | null) || null;
   const page = Math.max(1, Number(params.get('page')) || 1);
-  const [search, setSearch] = useState(params.get('q') ?? '');
-  const [debounced] = useDebouncedValue(search.trim(), 300);
+  const q = params.get('q') ?? '';
+  const [search, setSearch] = useState(q);
 
   const update = (next: Record<string, string | null>) =>
     setParams(
@@ -45,11 +45,7 @@ export function AdminStudentsPage() {
       { replace: true },
     );
 
-  useEffect(() => {
-    if ((params.get('q') ?? '') !== debounced) update({ q: debounced || null, page: null });
-    // Only when the debounced search changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debounced]);
+  const syncSearch = useDebouncedCallback((v: string) => update({ q: v.trim() || null, page: null }), 300);
 
   const filterOptions = useMemo(() => {
     const classes = scope.data?.classes ?? [];
@@ -63,7 +59,7 @@ export function AdminStudentsPage() {
 
   const { classId, gradeLevelId } = parseFilter(filter);
   const list = useStudentList(schoolId, {
-    q: debounced,
+    q,
     classId,
     gradeLevelId,
     status,
@@ -71,7 +67,7 @@ export function AdminStudentsPage() {
     offset: (page - 1) * PAGE_SIZE,
   });
   const pages = Math.max(1, Math.ceil((list.data?.total ?? 0) / PAGE_SIZE));
-  const filtered = !!(filter || status || debounced);
+  const filtered = !!(filter || status || q);
 
   return (
     <AdminPage
@@ -112,7 +108,10 @@ export function AdminStudentsPage() {
               placeholder="إبحث عن طالب (الاسم أو الكود)"
               leftSection={<IconSearch size={16} />}
               value={search}
-              onChange={(e) => setSearch(e.currentTarget.value)}
+              onChange={(e) => {
+                setSearch(e.currentTarget.value);
+                syncSearch(e.currentTarget.value);
+              }}
               miw={220}
             />
             <Select

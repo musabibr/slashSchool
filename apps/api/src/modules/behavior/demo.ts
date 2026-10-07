@@ -109,6 +109,10 @@ export async function seedBehaviorDemo(db: Db, opts: { today?: string } = {}): P
     .select()
     .from(s.users)
     .where(eq(s.users.phone, phoneOf('supervisor')));
+  const [teacher] = await db
+    .select()
+    .from(s.users)
+    .where(eq(s.users.phone, phoneOf('teacher')));
   const [guardian] = await db
     .select()
     .from(s.users)
@@ -238,12 +242,20 @@ export async function seedBehaviorDemo(db: Db, opts: { today?: string } = {}): P
         : schoolSubjects.map((subj) => ({ subjectId: subj.id, teacherId: supervisor?.id ?? null }));
       if (!teaching.length) continue;
       const pupils = roster.filter((p) => p.classSectionId === cls.id);
+      // The demo teacher's own subjects are evaluated every day (so their past sheets open prefilled);
+      // the other subjects take turns.
+      const mine = teaching.filter((t) => teacher && t.teacherId === teacher.id);
+      const others = teaching.filter((t) => !mine.includes(t));
       for (let day = 1; day <= EVALUATION_DAYS; day++) {
         const date = dayBack(day);
         if (!date) continue;
-        for (let k = 0; k < Math.min(SUBJECTS_PER_DAY, teaching.length); k++) {
-          const subjectIndex = (day * SUBJECTS_PER_DAY + k) % teaching.length;
-          const { subjectId, teacherId } = teaching[subjectIndex];
+        const turns = Math.max(0, Math.min(SUBJECTS_PER_DAY - mine.length, others.length));
+        const todays = [
+          ...mine,
+          ...Array.from({ length: turns }, (_, k) => others[(day * SUBJECTS_PER_DAY + k) % others.length]),
+        ];
+        todays.forEach(({ subjectId, teacherId }) => {
+          const subjectIndex = teaching.findIndex((t) => t.subjectId === subjectId);
           pupils.forEach((pupil, i) => {
             const seed = i * 7 + day * 3 + subjectIndex * 5;
             const rating = ratingFor(seed);
@@ -259,7 +271,7 @@ export async function seedBehaviorDemo(db: Db, opts: { today?: string } = {}): P
               createdAt: at(date, '11:00'),
             });
           });
-        }
+        });
       }
     }
     for (let i = 0; i < rows.length; i += INSERT_CHUNK) {

@@ -10,10 +10,16 @@ import { EmptyState, PageLoader, QueryState } from '../../components/States';
 import { notifyError, notifySuccess } from '../../lib/notify';
 import { useSchoolId } from '../../lib/params';
 import { useAssessments, useSaveScores, useScoreSheet } from './api';
-import { formatScore } from './format';
 import type { Assessment, ScoreSheet } from './types';
 
-type Value = number | '';
+/** What the score input holds: a number, '' (empty) or an intermediate string such as '1.'. */
+type Value = number | string;
+
+/** The score to send: null for an empty input, NaN when the text is not a number. */
+function toScore(v: Value): number | null {
+  if (typeof v === 'number') return v;
+  return v.trim() === '' ? null : Number(v);
+}
 
 /** Picker label: the quiz title, or the exam period's name for a timetable sitting. */
 function assessmentLabel(a: Assessment): string {
@@ -63,10 +69,13 @@ function ScoreEditor({ schoolId, sheet }: { schoolId: string; sheet: ScoreSheet 
   useEffect(() => setValues(initial), [initial]);
   const save = useSaveScores(schoolId);
 
-  const errorOf = (v: Value) => (v !== '' && (v < 0 || v > max) ? `من 0 إلى ${max}` : null);
-  const changed = sheet.students.filter((s) => (values[s.id] ?? '') !== (s.score ?? ''));
+  const errorOf = (v: Value) => {
+    const score = toScore(v);
+    return score !== null && (Number.isNaN(score) || score < 0 || score > max) ? `من 0 إلى ${max}` : null;
+  };
+  const changed = sheet.students.filter((s) => toScore(values[s.id] ?? '') !== s.score);
   const hasScores = sheet.students.some((s) => s.score !== null);
-  const filled = sheet.students.filter((s) => values[s.id] !== '' && values[s.id] !== undefined).length;
+  const filled = sheet.students.filter((s) => toScore(values[s.id] ?? '') !== null).length;
 
   const submit = () => {
     if (changed.some((s) => errorOf(values[s.id] ?? ''))) {
@@ -80,10 +89,7 @@ function ScoreEditor({ schoolId, sheet }: { schoolId: string; sheet: ScoreSheet 
     save.mutate(
       {
         id: assessment.id,
-        scores: changed.map((s) => {
-          const v = values[s.id] ?? '';
-          return { studentId: s.id, score: v === '' ? null : v };
-        }),
+        scores: changed.map((s) => ({ studentId: s.id, score: toScore(values[s.id] ?? '') })),
       },
       {
         onSuccess: () => {
@@ -136,9 +142,7 @@ function ScoreEditor({ schoolId, sheet }: { schoolId: string; sheet: ScoreSheet 
                   value={v}
                   error={error ? true : undefined}
                   styles={{ input: { textAlign: 'center', fontWeight: 700 } }}
-                  onChange={(next) =>
-                    setValues((prev) => ({ ...prev, [s.id]: typeof next === 'number' ? next : next === '' ? '' : Number(next) }))
-                  }
+                  onChange={(next) => setValues((prev) => ({ ...prev, [s.id]: next }))}
                 />
                 <Text size="sm" c="dimmed" w={48}>
                   من {max}
@@ -292,5 +296,3 @@ export function GradesEntryPage() {
     </MobilePage>
   );
 }
-
-export { formatScore };

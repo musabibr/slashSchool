@@ -126,8 +126,10 @@ export interface Family {
   fullName: string;
   active: boolean;
   relation: Relation;
+  /** The children's father, grandfather and great-grandfather (the student's name parts 2–4). */
   fatherName: string;
   grandfatherName: string;
+  greatGrandfatherName: string;
   motherName: string;
   motherPhone: string | null;
   occupation: string | null;
