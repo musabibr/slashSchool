@@ -1,4 +1,13 @@
 import type { ModuleDeps, ModuleRouters } from '../types';
+import { guardianRouter } from './guardian';
+import { staffRouter } from './staff';
 
-/** attendance module — not implemented yet. */
-export function register(_routers: ModuleRouters, _deps: ModuleDeps): void {}
+/**
+ * Attendance (P8, S8–S10, admin "تسجيل الغياب").
+ *   /api/schools/:schoolId/attendance   → staffRouter (admins & supervisors)
+ *   /api/students/:studentId/attendance → guardianRouter (the student's guardians and school staff)
+ */
+export function register({ school, student }: ModuleRouters, { db }: ModuleDeps): void {
+  school.use('/attendance', staffRouter(db));
+  student.use('/attendance', guardianRouter(db));
+}

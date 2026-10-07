@@ -2,6 +2,7 @@ import { lazy, Suspense, type ComponentType } from 'react';
 import { Button, Center, Stack, Text } from '@mantine/core';
 import { createBrowserRouter, Link, Navigate } from 'react-router';
 import { ActivatePage } from './auth/ActivatePage';
+import { DemoLoginPage } from './auth/demo';
 import { LoginPage } from './auth/LoginPage';
 import { RequireAuth } from './auth/RequireAuth';
 import { SelectPage } from './auth/SelectPage';
@@ -59,6 +60,8 @@ const { lessons, attendance, assessment, behavior, fees, comms, timetable, peopl
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
   { path: '/activate', element: <ActivatePage /> },
+  { path: '/demo', element: <Navigate to="/login" replace /> },
+  { path: '/demo/:role', element: <DemoLoginPage /> },
   {
     element: <RequireAuth />,
     children: [

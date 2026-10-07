@@ -1,7 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import * as s from '../src/db/schema';
+import request from 'supertest';
+import { createApp } from '../src/app';
 import { issueActivationCode, issueStudentLinkCode } from '../src/lib/users';
+import { DEMO_ACCOUNTS } from '../src/seed/demo-accounts';
 import { PIN, setupTestApp, type TestContext } from './helpers';
 
 let t: TestContext;
@@ -67,7 +70,9 @@ describe('me', () => {
     expect(res.body.children.map((c: { school: { id: string } }) => c.school.id).sort()).toEqual(
       [t.fx.schoolA.id, t.fx.schoolB.id].sort(),
     );
-    expect(res.body.children.find((c: { id: string }) => c.id === t.fx.students.s1.id).classLabel).toBe('الصف الخامس - أ');
+    expect(res.body.children.find((c: { id: string }) => c.id === t.fx.students.s1.id).classLabel).toBe(
+      'الصف الخامس - أ',
+    );
     expect(res.body.schools).toEqual([]);
   });
 
@@ -157,5 +162,38 @@ describe('misc', () => {
   });
   it('public config hides demo data outside demo mode', async () => {
     expect((await t.anon().get('/api/public/config')).body).toEqual({ demoMode: false, demo: null });
+  });
+});
+
+describe('demo login', () => {
+  it('is unavailable outside demo mode', async () => {
+    const res = await t.anon().post('/api/public/demo/login').send({ role: 'admin' });
+    expect(res.status).toBe(404);
+  });
+
+  it('logs in as a demo role without credentials in demo mode', async () => {
+    const demoApp = createApp({ db: t.db, config: { ...t.config, demoMode: true } });
+    const missing = await request(demoApp).post('/api/public/demo/login').send({ role: 'teacher' });
+    expect(missing.status).toBe(404);
+    const teacher = DEMO_ACCOUNTS.find((a) => a.role === 'teacher')!;
+    await t.db.insert(s.users).values({ phone: teacher.phone, fullName: teacher.fullName, status: 'active' });
+    const agent = request.agent(demoApp);
+    expect((await agent.post('/api/public/demo/login').send({ role: 'teacher' })).status).toBe(200);
+    expect((await agent.get('/api/me')).body.user.phone).toBe(teacher.phone);
+    expect((await agent.post('/api/public/demo/login').send({ role: 'root' })).status).toBe(400);
+  });
+});
+
+describe('student summary', () => {
+  it('serves the guardian home header for guardians and staff, not strangers', async () => {
+    const guardian = await t.loginAs(t.fx.users.guardian.phone);
+    const res = await guardian.get(`/api/students/${t.fx.students.s1.id}/summary`);
+    expect(res.status).toBe(200);
+    expect(res.body.student.classLabel).toBe('الصف الخامس - أ');
+    expect(Object.keys(res.body.badges)).toHaveLength(9);
+    const other = await t.loginAs(t.fx.users.guardian2.phone);
+    expect((await other.get(`/api/students/${t.fx.students.s1.id}/summary`)).status).toBe(403);
+    const adminB = await t.loginAs(t.fx.users.adminB.phone);
+    expect((await adminB.get(`/api/students/${t.fx.students.s1.id}/summary`)).status).toBe(403);
   });
 });
