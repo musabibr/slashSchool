@@ -83,25 +83,46 @@ export async function createFixture(db: Db): Promise<Fixture> {
   const yearA = await one(
     db
       .insert(s.academicYears)
-      .values({ schoolId: schoolA.id, name: '2025/2026', startsOn: '2025-07-01', endsOn: '2026-06-30', isCurrent: true })
+      .values({
+        schoolId: schoolA.id,
+        name: '2025/2026',
+        startsOn: '2025-07-01',
+        endsOn: '2026-06-30',
+        isCurrent: true,
+      })
       .returning(),
   );
   const yearB = await one(
     db
       .insert(s.academicYears)
-      .values({ schoolId: schoolB.id, name: '2025/2026', startsOn: '2025-07-01', endsOn: '2026-06-30', isCurrent: true })
+      .values({
+        schoolId: schoolB.id,
+        name: '2025/2026',
+        startsOn: '2025-07-01',
+        endsOn: '2026-06-30',
+        isCurrent: true,
+      })
       .returning(),
   );
   const stageA = await one(db.insert(s.stages).values({ schoolId: schoolA.id, name: 'المتوسطة', sort: 1 }).returning());
   const stageB = await one(db.insert(s.stages).values({ schoolId: schoolB.id, name: 'الثانوية', sort: 1 }).returning());
   const grade5 = await one(
-    db.insert(s.gradeLevels).values({ schoolId: schoolA.id, stageId: stageA.id, name: 'الصف الخامس', sort: 5 }).returning(),
+    db
+      .insert(s.gradeLevels)
+      .values({ schoolId: schoolA.id, stageId: stageA.id, name: 'الصف الخامس', sort: 5 })
+      .returning(),
   );
   const grade6 = await one(
-    db.insert(s.gradeLevels).values({ schoolId: schoolA.id, stageId: stageA.id, name: 'الصف السادس', sort: 6 }).returning(),
+    db
+      .insert(s.gradeLevels)
+      .values({ schoolId: schoolA.id, stageId: stageA.id, name: 'الصف السادس', sort: 6 })
+      .returning(),
   );
   const gradeB = await one(
-    db.insert(s.gradeLevels).values({ schoolId: schoolB.id, stageId: stageB.id, name: 'الصف الأول', sort: 1 }).returning(),
+    db
+      .insert(s.gradeLevels)
+      .values({ schoolId: schoolB.id, stageId: stageB.id, name: 'الصف الأول', sort: 1 })
+      .returning(),
   );
   const cls = (schoolId: string, academicYearId: string, gradeLevelId: string, name: string) =>
     one(db.insert(s.classSections).values({ schoolId, academicYearId, gradeLevelId, name }).returning());
@@ -184,7 +205,13 @@ export async function createFixture(db: Db): Promise<Fixture> {
   await db.insert(s.studentGuardians).values([
     { schoolId: schoolA.id, studentId: students.s1.id, userId: users.guardian.id, relation: 'father', isPrimary: true },
     { schoolId: schoolB.id, studentId: students.s4.id, userId: users.guardian.id, relation: 'father', isPrimary: true },
-    { schoolId: schoolA.id, studentId: students.s2.id, userId: users.guardian2.id, relation: 'mother', isPrimary: true },
+    {
+      schoolId: schoolA.id,
+      studentId: students.s2.id,
+      userId: users.guardian2.id,
+      relation: 'mother',
+      isPrimary: true,
+    },
   ]);
 
   return {

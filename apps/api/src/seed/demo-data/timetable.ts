@@ -111,7 +111,13 @@ function tryWeek(classes: readonly ScheduleClass[], rng: Rng): TimetableCell[] |
     picks.forEach((row, index) => {
       row.forEach((si, ci) => {
         const x = classes[ci].subjects[si];
-        cells.push({ classId: classes[ci].classId, weekday, period: index + 1, subjectId: x.subjectId, teacherId: x.teacherId });
+        cells.push({
+          classId: classes[ci].classId,
+          weekday,
+          period: index + 1,
+          subjectId: x.subjectId,
+          teacherId: x.teacherId,
+        });
       });
     });
   }

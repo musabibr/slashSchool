@@ -5,6 +5,7 @@ import {
   ELDER_NAMES,
   EXTRA_SUPERVISOR,
   EXTRA_TEACHERS,
+  FEE_INSTALLMENTS,
   FEMALE_JOBS,
   FEMALE_NAMES,
   GUARDIAN_RELATIONS,
@@ -36,12 +37,7 @@ const SIBLING_PAIRS: Record<SchoolModel['key'], number> = { middle: 4, secondary
 const SIBLING_DISCOUNT = 0.1;
 const ACTIVATION_CODE_TTL_MS = 3650 * 86_400_000;
 
-/** Fee plan total per school level, used for the sibling discount. */
-export const PLAN_INSTALLMENTS: Record<SchoolModel['key'], readonly number[]> = {
-  middle: [300_000, 150_000, 150_000],
-  secondary: [350_000, 200_000, 200_000],
-};
-const planTotal = (key: SchoolModel['key']) => PLAN_INSTALLMENTS[key].reduce((a, b) => a + b, 0);
+const planTotal = (key: SchoolModel['key']) => FEE_INSTALLMENTS[key].reduce((a, b) => a + b, 0);
 
 /** Name combinations reserved for the scripted families. */
 const RESERVED_LINEAGES = new Set(['إبراهيم|عبدالله', 'عوض|محمد']);
@@ -89,10 +85,14 @@ export function buildPeople(ctx: DemoContext): World {
     }
   };
 
+  /** A login during the last week: staff in the morning, guardians in the evening. */
+  const recentLogin = (fromHour: number) =>
+    ctx.cal.at(rng.pick(dates.recent.slice(0, 6)), fromHour + rng.int(0, 3), rng.int(0, 59));
+
   // ── Staff ──
   const activeUser = (phone: string, fullName: string) => {
     const id = ids.next();
-    rows.users.push({ id, phone, fullName, pinHash: ctx.pinHash, status: 'active' });
+    rows.users.push({ id, phone, fullName, pinHash: ctx.pinHash, status: 'active', lastLoginAt: recentLogin(7) });
     return id;
   };
   const adminId = activeUser(demoAccount('admin').phone, demoAccount('admin').fullName);
@@ -363,7 +363,14 @@ export function buildPeople(ctx: DemoContext): World {
       yearsAgo: 1,
       linkCode: true,
     },
-    { classKey: 'middle:الصف الخامس:أ', firstName: 'هبة', gender: 'female', family: activationFamily, ability: 0.72, yearsAgo: 1 },
+    {
+      classKey: 'middle:الصف الخامس:أ',
+      firstName: 'هبة',
+      gender: 'female',
+      family: activationFamily,
+      ability: 0.72,
+      yearsAgo: 1,
+    },
   ];
 
   // ── Students ──
@@ -408,8 +415,12 @@ export function buildPeople(ctx: DemoContext): World {
     for (const cls of school.classes) {
       const size = rng.int(MIN_CLASS_SIZE, MAX_CLASS_SIZE);
       const taken = new Set(cls.students.map((st) => st.firstName));
-      while (cls.students.length < size) {
-        const gender: Gender = rng.chance(FEMALE_SHARE) ? 'female' : 'male';
+      // Exactly ~60% girls in every class, in random order.
+      const girls = Math.round(size * FEMALE_SHARE) - cls.students.filter((st) => st.gender === 'female').length;
+      const genders = rng.shuffle(
+        Array.from({ length: size - cls.students.length }, (_, i): Gender => (i < girls ? 'female' : 'male')),
+      );
+      for (const gender of genders) {
         const names = gender === 'female' ? FEMALE_NAMES : MALE_NAMES;
         let firstName: string;
         do firstName = rng.pick(names);
@@ -486,6 +497,7 @@ export function buildPeople(ctx: DemoContext): World {
         fullName: f.fullName,
         pinHash: f.active ? ctx.pinHash : null,
         status: f.active ? 'active' : 'pending',
+        lastLoginAt: f.active ? recentLogin(18) : null,
       });
     }
     addMembership(f.guardianId, st.school.id, 'guardian');

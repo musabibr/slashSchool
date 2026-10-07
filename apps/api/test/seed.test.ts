@@ -9,6 +9,7 @@ import { connectPglite, type Db, type DbHandle } from '../src/db/client';
 import * as s from '../src/db/schema';
 import { buildDemoRows, seedDemo } from '../src/seed/demo';
 import { DEMO_ACCOUNTS, DEMO_ACTIVATION, DEMO_LINK_CODE, DEMO_PIN, DEMO_SCHOOLS } from '../src/seed/demo-accounts';
+import { hashSecret } from '../src/lib/security';
 import { resetDatabase } from '../src/seed/reset';
 
 /** A Wednesday in the 2025/2026 academic year. */
@@ -49,6 +50,15 @@ async function count(table: Parameters<Db['$count']>[0], where?: SQL): Promise<n
 async function rawRows<T>(query: SQL): Promise<T[]> {
   const result = await db.execute(query);
   return (result as unknown as { rows: T[] }).rows;
+}
+
+/** True when a response body carries something to show: a non-empty list, or an object holding one. */
+function hasData(body: unknown): boolean {
+  if (Array.isArray(body)) return body.length > 0;
+  if (body && typeof body === 'object') {
+    return Object.values(body).some((v) => (Array.isArray(v) ? v.length > 0 : typeof v === 'number' && v > 0));
+  }
+  return false;
 }
 
 async function schoolByCode(code: string) {
@@ -199,6 +209,26 @@ describe('authorization on the demo data', () => {
     expect((await teacher.get(`/api/schools/${secondary.id}/lookups/scope`)).status).toBe(403);
   });
 
+  it("another school's admin cannot open the middle school or its students", async () => {
+    const secondary = await schoolByCode(DEMO_SCHOOLS.secondary.code);
+    const middle = await schoolByCode(DEMO_SCHOOLS.middle.code);
+    const [adminB] = await db
+      .insert(s.users)
+      .values({
+        phone: '0900009999',
+        fullName: 'مدير الثانوية فقط',
+        pinHash: await hashSecret(DEMO_PIN),
+        status: 'active',
+      })
+      .returning();
+    await db.insert(s.memberships).values({ userId: adminB.id, schoolId: secondary.id, role: 'admin' });
+    const agent = await login(adminB.phone);
+    expect((await agent.get(`/api/schools/${secondary.id}/lookups/scope`)).status).toBe(200);
+    expect((await agent.get(`/api/schools/${middle.id}/lookups/scope`)).status).toBe(403);
+    const musab = await child('مصعب');
+    expect((await agent.get(`/api/students/${musab.id}/attendance`)).status).toBe(403);
+  });
+
   it('rejects an invalid date', async () => {
     await expect(seedDemo(db, { today: '2025-13-40' })).rejects.toThrow(/invalid today/);
   });
@@ -239,8 +269,8 @@ describe('structure', () => {
       expect(codes).toContain(`S-${codes.length}`);
     }
     const female = students.filter((x) => x.gender === 'female').length / students.length;
-    expect(female).toBeGreaterThan(0.5);
-    expect(female).toBeLessThan(0.7);
+    expect(female).toBeGreaterThan(0.55);
+    expect(female).toBeLessThan(0.65);
     expect(students.every((x) => x.fatherName && x.grandfatherName && x.registeredAt <= TODAY)).toBe(true);
     expect(new Set(students.map((x) => x.registeredAt.slice(0, 4))).size).toBeGreaterThan(2);
   });
@@ -507,10 +537,15 @@ describe('determinism and robustness', () => {
     expect(july).toHaveLength(2);
     expect(await count(s.payments, gt(s.payments.paidAt, '2025-07-02'))).toBe(0);
   });
+});
 
-  it('works with the default today (what the server does on first boot)', async () => {
+describe('with the default today (what the server does on first boot)', () => {
+  beforeAll(async () => {
     await resetDatabase(db);
     await seedDemo(db);
+  });
+
+  it("is centred on Khartoum's today: absences this month, this week's lessons, nothing in the future", async () => {
     const today = todayIn('Africa/Khartoum');
     const musab = await child('مصعب');
     const agent = await login(ACCOUNT.guardian.phone);
@@ -528,5 +563,69 @@ describe('determinism and robustness', () => {
     expect(week.body.length).toBeGreaterThan(0);
     expect(await count(s.lessons, gt(s.lessons.date, today))).toBe(0);
     expect(await count(s.lessons, gt(s.lessons.createdAt, new Date()))).toBe(0);
+  });
+
+  it('every guardian screen of every demo child answers with data', async () => {
+    const agent = await login(ACCOUNT.guardian.phone);
+    const children = (await agent.get('/api/me')).body.children as Array<{ id: string; fullName: string }>;
+    expect(children).toHaveLength(3);
+    const screens = [
+      'subjects?module=lessons',
+      'subjects?module=homework',
+      'lessons?range=all',
+      'homework?range=all',
+      'attendance',
+      'fees',
+      'exams',
+      'results',
+      'behavior',
+      'calendar',
+      'announcements',
+    ];
+    for (const c of children) {
+      // Badges first: opening a screen marks it as seen.
+      const summary = await agent.get(`/api/students/${c.id}/summary`);
+      expect(summary.status).toBe(200);
+      const badges = Object.values(summary.body.badges as Record<string, number>);
+      expect(
+        badges.reduce((a, b) => a + b, 0),
+        c.fullName,
+      ).toBeGreaterThan(0);
+      for (const screen of screens) {
+        const res = await agent.get(`/api/students/${c.id}/${screen}`);
+        expect(res.status, `${c.fullName} ${screen}`).toBe(200);
+        expect(hasData(res.body), `${c.fullName} ${screen}`).toBe(true);
+      }
+    }
+  });
+
+  it('every staff screen answers with data', async () => {
+    const school = await schoolByCode(DEMO_SCHOOLS.middle.code);
+    const base = `/api/schools/${school.id}`;
+    const screens: Record<string, string[]> = {
+      [ACCOUNT.admin.phone]: [
+        'dashboard',
+        'students',
+        'guardians',
+        'staff',
+        'fees/plans',
+        'announcements',
+        'calendar',
+        'regulations',
+        'behavior',
+        'exam-periods',
+        'attendance/today',
+      ],
+      [ACCOUNT.supervisor.phone]: ['lessons', 'exam-periods', 'assessments', 'behavior', 'attendance/today'],
+      [ACCOUNT.teacher.phone]: ['lessons', 'assessments', 'timetable/mine'],
+    };
+    for (const [phone, paths] of Object.entries(screens)) {
+      const agent = await login(phone);
+      for (const path of paths) {
+        const res = await agent.get(`${base}/${path}`);
+        expect(res.status, `${phone} ${path}`).toBe(200);
+        expect(hasData(res.body), `${phone} ${path}`).toBe(true);
+      }
+    }
   });
 });

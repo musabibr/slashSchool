@@ -2,7 +2,6 @@ import type { ModuleDeps, ModuleRouters } from '../types';
 import { guardianFeesRouter } from './guardian';
 import { staffFeesRouter } from './staff';
 
-
 /**
  * Fees, recorded by hand (P9, admin fees page, student profile panel, fee notice).
  *   /api/schools/:schoolId/fees   → staffFeesRouter (admins)

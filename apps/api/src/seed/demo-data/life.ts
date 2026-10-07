@@ -9,16 +9,8 @@ import {
   type EvaluationRating,
   type PaymentMethod,
 } from '@slash/shared';
-import { byGender, EVALUATION_COMMENTS, REGULATIONS } from './content';
-import {
-  subjectNamed,
-  teacherOf,
-  type DemoContext,
-  type SchoolModel,
-  type StudentModel,
-  type World,
-} from './context';
-import { PLAN_INSTALLMENTS } from './people';
+import { byGender, EVALUATION_COMMENTS, FEE_INSTALLMENTS, REGULATIONS } from './content';
+import { teacherOf, type DemoContext, type SchoolModel, type StudentModel, type World } from './context';
 import type { Rng } from './random';
 import { maxDate, minDate } from './time';
 
@@ -58,11 +50,13 @@ function buildBehavior(ctx: DemoContext, world: World, rng: Rng) {
   }
 
   const incident = (student: StudentModel, reg: number, date: string, withPenalty: boolean, recordedBy: string) => {
+    const regulationId = regulationIds.get(student.school.id)?.[reg];
+    if (!regulationId) throw new Error(`demo regulation missing: ${reg}`);
     rows.behaviorIncidents.push({
       id: ids.next(),
       schoolId: student.school.id,
       studentId: student.id,
-      regulationId: regulationIds.get(student.school.id)?.[reg] ?? '',
+      regulationId,
       date,
       details: byGender(REGULATIONS[reg].details, student.gender),
       penalty: withPenalty ? REGULATIONS[reg].defaultPenalty : null,
@@ -175,7 +169,7 @@ const PAYMENT_METHODS: ReadonlyArray<readonly [PaymentMethod, number]> = [
 const INSTALLMENT_NAMES = ['القسط الأول', 'القسط الثاني', 'القسط الثالث'];
 
 /** Installment due dates of the academic year: at its start, mid-January and mid-April. */
-export function installmentDueDates(startYear: number): string[] {
+function installmentDueDates(startYear: number): string[] {
   return [`${startYear}-07-15`, `${startYear + 1}-01-15`, `${startYear + 1}-04-15`];
 }
 
@@ -204,7 +198,7 @@ function buildFees(ctx: DemoContext, world: World, rng: Rng) {
 
   for (const school of world.schools) {
     const payments: Array<{ studentFeeId: string; amount: number; paidAt: string; method: PaymentMethod }> = [];
-    const amounts = PLAN_INSTALLMENTS[school.key];
+    const amounts = FEE_INSTALLMENTS[school.key];
     for (const grade of school.grades) {
       const feePlanId = ids.next();
       const planCreatedAt = cal.at(addDays(year.startsOn, -20), 10);
@@ -384,7 +378,7 @@ function buildAnnouncements(ctx: DemoContext, world: World) {
         },
         {
           title: 'مسابقة القرآن الكريم',
-          body: 'باب التسجيل مفتوح لمسابقة حفظ القرآن الكريم السنوية حتى نهاية الأسبوع، سجّلوا أبناءكم لدى مشرف الصف.',
+          body: 'باب التسجيل مفتوح لمسابقة حفظ القرآن الكريم السنوية، سجّلوا أبناءكم لدى مشرف الصف قبل موعد المسابقة.',
           audience: 'school',
           audienceId: null,
           publishedAt: cal.at(d[9], 9, 30),
@@ -445,15 +439,22 @@ interface CalendarDef {
   startsOn: string;
   endsOn?: string;
   details?: string;
-  /** Default: planned a month and a half ago. */
+  /** Default: planned two months ago (before every past event). */
   createdAt?: Date;
 }
 
 function buildCalendar(ctx: DemoContext, world: World) {
   const { rows, ids, cal, dates, today } = ctx;
-  const planned = cal.at(addDays(today, -45), 10);
+  const planned = cal.at(addDays(today, -60), 10);
   const upcomingLast = dates.upcomingMonthly.days[dates.upcomingMonthly.days.length - 1];
   const last = <T>(list: readonly T[]) => list[list.length - 1];
+  const examDays = new Set([...dates.lastMonthly.days, ...dates.upcomingMonthly.days]);
+  /** The nearest school day without exams, looking back (-1) or ahead (+1). */
+  const freeDay = (date: string, step: 1 | -1) => {
+    let d = date;
+    while (!cal.isSchoolDay(d) || examDays.has(d)) d = addDays(d, step);
+    return d;
+  };
   for (const school of world.schools) {
     const events: CalendarDef[] = [
       { title: 'عطلة منتصف الفترة', kind: 'holiday', startsOn: dates.pastBreak[0], endsOn: last(dates.pastBreak) },
@@ -464,15 +465,15 @@ function buildCalendar(ctx: DemoContext, world: World) {
         endsOn: last(dates.lastMonthly.days),
       },
       {
-        title: 'مسابقة القرآن الكريم السنوية',
+        title: 'حملة النظافة والتشجير',
         kind: 'event',
-        startsOn: cal.onOrBefore(addDays(today, -26)),
-        details: 'تصفيات المسابقة بين الفصول في مسرح المدرسة',
+        startsOn: freeDay(addDays(today, -26), -1),
+        details: 'يشارك فيها الطلاب في تنظيف الفصول وزراعة الأشجار بفناء المدرسة',
       },
       {
         title: 'يوم الصحة المدرسية',
         kind: 'event',
-        startsOn: cal.onOrBefore(addDays(today, -9)),
+        startsOn: freeDay(addDays(today, -9), -1),
         details: 'فحص طبي مجاني للطلاب بالتعاون مع وزارة الصحة',
       },
       {
@@ -492,25 +493,31 @@ function buildCalendar(ctx: DemoContext, world: World) {
       {
         title: school.key === 'middle' ? 'رحلة مدرسية إلى حديقة القرشي' : 'زيارة جامعة الخرطوم',
         kind: 'event',
-        startsOn: cal.onOrAfter(addDays(upcomingLast, 3)),
+        startsOn: freeDay(addDays(upcomingLast, 3), 1),
+      },
+      {
+        title: 'مسابقة القرآن الكريم السنوية',
+        kind: 'event',
+        startsOn: freeDay(addDays(upcomingLast, 6), 1),
+        details: 'تصفيات المسابقة بين الفصول في مسرح المدرسة',
       },
       {
         title: 'اليوم الرياضي المدرسي',
         kind: 'event',
-        startsOn: cal.onOrAfter(addDays(upcomingLast, 8)),
+        startsOn: freeDay(addDays(upcomingLast, 10), 1),
         details: 'منافسات في كرة القدم وألعاب القوى بين الفصول',
         createdAt: cal.at(dates.recent[0], 9, 15),
       },
       {
         title: 'حفل تكريم الطلاب المتفوقين',
         kind: 'event',
-        startsOn: cal.onOrAfter(addDays(today, 27)),
+        startsOn: freeDay(addDays(today, 27), 1),
         details: 'تكريم أوائل الفصول في الامتحانات الشهرية بحضور أولياء الأمور',
       },
       {
         title: 'المعرض العلمي السنوي',
         kind: 'event',
-        startsOn: cal.onOrAfter(addDays(today, 34)),
+        startsOn: freeDay(addDays(today, 34), 1),
         details: 'يعرض فيه الطلاب مشاريعهم العلمية، والدعوة عامة لأولياء الأمور',
       },
       {
@@ -567,5 +574,3 @@ function buildReadCursors(ctx: DemoContext, world: World) {
     }
   }
 }
-
-export { subjectNamed };

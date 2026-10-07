@@ -1,7 +1,7 @@
 /**
  * Arabic content for the demo dataset: names, places, curricula and wording. Data only.
  */
-import type { Gender, Relation } from '@slash/shared';
+import type { EvaluationRating, Gender, Relation } from '@slash/shared';
 
 // ───────────────────────────── People ─────────────────────────────
 
@@ -624,7 +624,11 @@ export const SCHOOL_DEFS: readonly SchoolDef[] = [
           { section: 'ب', teachers: middleTeachers('demo', 'mArabicA', 'mScience') },
         ],
       },
-      { name: 'الصف السادس', age: 11, classes: [{ section: 'أ', teachers: middleTeachers('mMath', 'mArabicB', 'demo') }] },
+      {
+        name: 'الصف السادس',
+        age: 11,
+        classes: [{ section: 'أ', teachers: middleTeachers('mMath', 'mArabicB', 'demo') }],
+      },
       {
         name: 'الصف السابع',
         age: 12,
@@ -667,9 +671,17 @@ export const LESSON_DETAILS: Record<SubjectKind, readonly string[]> = {
     'تجربة عملية داخل الفصل ومناقشة النتائج',
     'مراجعة الدرس السابق ثم شرح الدرس الجديد',
   ],
-  islamic: ['شرح الدرس واستخلاص الدروس المستفادة', 'قراءة الأدلة الشرعية ومناقشتها', 'مراجعة الدرس السابق ثم شرح الدرس الجديد'],
+  islamic: [
+    'شرح الدرس واستخلاص الدروس المستفادة',
+    'قراءة الأدلة الشرعية ومناقشتها',
+    'مراجعة الدرس السابق ثم شرح الدرس الجديد',
+  ],
   quran: ['تلاوة جماعية وتصحيح التلاوة', 'شرح معاني الكلمات ثم التسميع', 'تسميع فردي وتصحيح أحكام التجويد'],
-  computer: ['شرح نظري ثم تطبيق عملي في المعمل', 'تطبيق عملي على أجهزة المعمل', 'مراجعة الدرس السابق ثم شرح الدرس الجديد'],
+  computer: [
+    'شرح نظري ثم تطبيق عملي في المعمل',
+    'تطبيق عملي على أجهزة المعمل',
+    'مراجعة الدرس السابق ثم شرح الدرس الجديد',
+  ],
 };
 
 /** Homework text for a lesson; `pages` is the lesson's last page. */
@@ -690,6 +702,14 @@ export function homeworkText(kind: SubjectKind, page: number, variant: number): 
   const list = options[kind];
   return list[variant % list.length];
 }
+
+// ───────────────────────────── Fees ─────────────────────────────
+
+/** Installments of the yearly fee plan (SDG): middle 600,000, secondary 750,000. */
+export const FEE_INSTALLMENTS: Record<SchoolDef['key'], readonly number[]> = {
+  middle: [300_000, 150_000, 150_000],
+  secondary: [350_000, 200_000, 200_000],
+};
 
 // ───────────────────────────── Behavior ─────────────────────────────
 
@@ -744,7 +764,7 @@ export const REGULATIONS: readonly RegulationDef[] = [
 ];
 
 /** Evaluation comments (S17) as [male, female] wording, per rating. */
-export const EVALUATION_COMMENTS = {
+export const EVALUATION_COMMENTS: Record<EvaluationRating, ReadonlyArray<readonly [string, string]>> = {
   excellent: [
     ['مشاركة ممتازة في الحصة', 'مشاركة ممتازة في الحصة'],
     ['متميز في حل التمارين', 'متميزة في حل التمارين'],
@@ -763,7 +783,7 @@ export const EVALUATION_COMMENTS = {
     ['كثير الحديث أثناء الشرح', 'كثيرة الحديث أثناء الشرح'],
     ['يشغل زملاءه داخل الفصل', 'تشغل زميلاتها داخل الفصل'],
   ],
-} as const;
+};
 
 export const ABSENCE_NOTES = ['مريض', 'ظرف عائلي', 'سفر مع الأسرة', 'موعد طبي'] as const;
 

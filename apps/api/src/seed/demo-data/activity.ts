@@ -1,6 +1,6 @@
 import { monthBounds, weekdayOf } from '@slash/shared';
 import { ABSENCE_NOTES, homeworkText, LESSON_DETAILS, type SubjectDef } from './content';
-import { teacherOf, type DemoContext, type StudentModel, type World } from './context';
+import { teacherOf, type DemoChild, type DemoContext, type StudentModel, type World } from './context';
 import { ATTENDANCE_DAYS, LESSON_DAYS } from './plan';
 import type { Rng } from './random';
 import type { TimetableCell } from './timetable';
@@ -11,7 +11,7 @@ const ABSENCE_RATE = 0.04;
 /** Classes whose attendance is not taken yet today, so "record absence" has something to do. */
 const NOT_RECORDED_TODAY = new Set(['middle:الصف السابع:أ', 'secondary:الصف الثاني الثانوي:أ']);
 /** Absences of the demo children: [this month, earlier in the academic year]. */
-const DEMO_ABSENCES: Record<'musab' | 'ismail' | 'mohamed', readonly [number, number]> = {
+const DEMO_ABSENCES: Record<DemoChild, readonly [number, number]> = {
   musab: [3, 5],
   ismail: [1, 1],
   mohamed: [1, 0],
@@ -55,7 +55,12 @@ function lessonContent(def: SubjectDef, index: number, rng: Rng): LessonContent 
   const topic = index % def.topics.length;
   const start = 8 + topic * 5 + rng.int(0, 1);
   const end = start + rng.int(2, 5);
-  return { title: def.topics[topic], pages: `${start} - ${end}`, details, homework: homeworkText(def.kind, end, rng.int(0, 5)) };
+  return {
+    title: def.topics[topic],
+    pages: `${start} - ${end}`,
+    details,
+    homework: homeworkText(def.kind, end, rng.int(0, 5)),
+  };
 }
 
 /** Minutes after midnight when a lesson taught in `period` was posted (periods start at 7:30, 45 min). */

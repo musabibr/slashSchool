@@ -52,7 +52,9 @@ function markFor(student: StudentModel, max: number, rng: Rng, scripted?: number
 
 /** Latest lesson topic of a subject in a class on or before `date`. */
 function latestTopics(log: Map<string, LessonLogEntry[]>, cls: ClassModel, subject: SubjectModel, date: string) {
-  const titles = (log.get(cls.id) ?? []).filter((e) => e.subjectId === subject.id && e.date <= date).map((e) => e.title);
+  const titles = (log.get(cls.id) ?? [])
+    .filter((e) => e.subjectId === subject.id && e.date <= date)
+    .map((e) => e.title);
   const fallback = subject.def.topics[0] ?? subject.def.name;
   return { latest: titles[titles.length - 1] ?? fallback, previous: titles[titles.length - 2] ?? null };
 }
@@ -113,7 +115,12 @@ export function buildAssessments(ctx: DemoContext, world: World, log: Map<string
               rows.scores.push({
                 assessmentId,
                 studentId: student.id,
-                score: markFor(student, maxScore, rng, MUSAB_SCORES[kind === 'term' ? 'term' : 'monthly'][subject.def.name]),
+                score: markFor(
+                  student,
+                  maxScore,
+                  rng,
+                  MUSAB_SCORES[kind === 'term' ? 'term' : 'monthly'][subject.def.name],
+                ),
                 enteredBy,
                 updatedAt: cal.at(cal.after(date), 13, rng.int(0, 90)),
               });
