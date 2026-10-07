@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router';
 import { useMe } from '../api/hooks';
 import { ErrorState, PageLoader } from '../components/States';
+import { DemoSwitcher } from './demo';
 
 /** Gate for every logged-in route. */
 export function RequireAuth() {
@@ -12,5 +13,10 @@ export function RequireAuth() {
     const next = location.pathname + location.search;
     return <Navigate to={`/login${next && next !== '/' ? `?next=${encodeURIComponent(next)}` : ''}`} replace />;
   }
-  return <Outlet />;
+  return (
+    <>
+      <Outlet />
+      <DemoSwitcher />
+    </>
+  );
 }

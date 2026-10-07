@@ -1,7 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import * as s from '../src/db/schema';
+import request from 'supertest';
+import { createApp } from '../src/app';
 import { issueActivationCode, issueStudentLinkCode } from '../src/lib/users';
+import { DEMO_ACCOUNTS } from '../src/seed/demo-accounts';
 import { PIN, setupTestApp, type TestContext } from './helpers';
 
 let t: TestContext;
@@ -67,7 +70,9 @@ describe('me', () => {
     expect(res.body.children.map((c: { school: { id: string } }) => c.school.id).sort()).toEqual(
       [t.fx.schoolA.id, t.fx.schoolB.id].sort(),
     );
-    expect(res.body.children.find((c: { id: string }) => c.id === t.fx.students.s1.id).classLabel).toBe('الصف الخامس - أ');
+    expect(res.body.children.find((c: { id: string }) => c.id === t.fx.students.s1.id).classLabel).toBe(
+      'الصف الخامس - أ',
+    );
     expect(res.body.schools).toEqual([]);
   });
 
@@ -157,5 +162,24 @@ describe('misc', () => {
   });
   it('public config hides demo data outside demo mode', async () => {
     expect((await t.anon().get('/api/public/config')).body).toEqual({ demoMode: false, demo: null });
+  });
+});
+
+describe('demo login', () => {
+  it('is unavailable outside demo mode', async () => {
+    const res = await t.anon().post('/api/public/demo/login').send({ role: 'admin' });
+    expect(res.status).toBe(404);
+  });
+
+  it('logs in as a demo role without credentials in demo mode', async () => {
+    const demoApp = createApp({ db: t.db, config: { ...t.config, demoMode: true } });
+    const missing = await request(demoApp).post('/api/public/demo/login').send({ role: 'teacher' });
+    expect(missing.status).toBe(404);
+    const teacher = DEMO_ACCOUNTS.find((a) => a.role === 'teacher')!;
+    await t.db.insert(s.users).values({ phone: teacher.phone, fullName: teacher.fullName, status: 'active' });
+    const agent = request.agent(demoApp);
+    expect((await agent.post('/api/public/demo/login').send({ role: 'teacher' })).status).toBe(200);
+    expect((await agent.get('/api/me')).body.user.phone).toBe(teacher.phone);
+    expect((await agent.post('/api/public/demo/login').send({ role: 'root' })).status).toBe(400);
   });
 });
