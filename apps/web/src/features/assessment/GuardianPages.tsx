@@ -85,7 +85,12 @@ function QuizCard({ quiz, today }: { quiz: GuardianQuiz; today: string | undefin
   const isToday = !!today && quiz.date === today;
   const upcoming = !!today && quiz.date > today;
   return (
-    <Paper withBorder radius="md" p="md" style={upcoming || isToday ? { borderColor: 'var(--mantine-color-orange-4)' } : undefined}>
+    <Paper
+      withBorder
+      radius="md"
+      p="md"
+      style={upcoming || isToday ? { borderColor: 'var(--mantine-color-orange-4)' } : undefined}
+    >
       <Stack gap={6}>
         <Group justify="space-between" align="flex-start" wrap="nowrap">
           <Text fw={700} size="lg" lh={1.35} style={{ overflowWrap: 'anywhere' }}>
@@ -218,12 +223,7 @@ function ResultCard({ item, studentId }: { item: ResultItem; studentId: string }
     );
   }
   return (
-    <UnstyledButton
-      component={Link}
-      to={`/g/${studentId}/results/${item.id}`}
-      display="block"
-      aria-label={item.name}
-    >
+    <UnstyledButton component={Link} to={`/g/${studentId}/results/${item.id}`} display="block" aria-label={item.name}>
       <Paper withBorder radius="md" p="md" style={{ borderInlineStart: '4px solid var(--mantine-color-cyan-6)' }}>
         <Group justify="space-between" wrap="nowrap" gap="xs">
           <Stack gap={4} style={{ minWidth: 0 }}>

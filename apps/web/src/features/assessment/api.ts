@@ -21,7 +21,8 @@ export const staffKeys = {
   all: (schoolId: string) => ['schools', schoolId, 'assessment'] as const,
   periods: (schoolId: string, gradeLevelId: string | null) =>
     ['schools', schoolId, 'assessment', 'periods', gradeLevelId] as const,
-  timetable: (schoolId: string, periodId: string) => ['schools', schoolId, 'assessment', 'timetable', periodId] as const,
+  timetable: (schoolId: string, periodId: string) =>
+    ['schools', schoolId, 'assessment', 'timetable', periodId] as const,
   results: (schoolId: string, periodId: string, classId: string | null) =>
     ['schools', schoolId, 'assessment', 'results', periodId, classId] as const,
   list: (schoolId: string, filters: AssessmentFilters) => ['schools', schoolId, 'assessment', 'list', filters] as const,
@@ -66,7 +67,8 @@ export function usePeriodTimetable(schoolId: string, periodId: string | null) {
 export function usePeriodResults(schoolId: string, periodId: string, classId: string | null, enabled = true) {
   return useQuery({
     queryKey: staffKeys.results(schoolId, periodId, classId),
-    queryFn: () => api.get<PeriodResults>(`/api/schools/${schoolId}/exam-periods/${periodId}/results${qs({ classId })}`),
+    queryFn: () =>
+      api.get<PeriodResults>(`/api/schools/${schoolId}/exam-periods/${periodId}/results${qs({ classId })}`),
     enabled: enabled && !!classId,
     placeholderData: keepPreviousData,
   });

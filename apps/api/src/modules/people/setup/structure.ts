@@ -34,7 +34,12 @@ const yearCreate = z
   .object({ name: zName(50), startsOn: zDate, endsOn: zDate, isCurrent: z.boolean().optional() })
   .refine((v) => v.startsOn < v.endsOn, { message: ENDS_AFTER_START, path: ['endsOn'] });
 const yearPatch = z
-  .object({ name: zName(50).optional(), startsOn: zDate.optional(), endsOn: zDate.optional(), isCurrent: z.boolean().optional() })
+  .object({
+    name: zName(50).optional(),
+    startsOn: zDate.optional(),
+    endsOn: zDate.optional(),
+    isCurrent: z.boolean().optional(),
+  })
   .refine(nonEmpty, NOTHING_TO_UPDATE);
 
 const stageCreate = z.object({ name: zName(), sort: zSort.optional() });
@@ -125,11 +130,7 @@ export function structureRouter(db: Db) {
         .from(academicYears)
         .where(eq(academicYears.schoolId, school.id))
         .orderBy(desc(academicYears.startsOn)),
-      db
-        .select()
-        .from(stages)
-        .where(eq(stages.schoolId, school.id))
-        .orderBy(asc(stages.sort), asc(stages.name)),
+      db.select().from(stages).where(eq(stages.schoolId, school.id)).orderBy(asc(stages.sort), asc(stages.name)),
       db
         .select()
         .from(gradeLevels)
@@ -167,10 +168,7 @@ export function structureRouter(db: Db) {
             .from(teachingAssignments)
             .innerJoin(users, eq(users.id, teachingAssignments.teacherId))
             .where(
-              and(
-                eq(teachingAssignments.schoolId, school.id),
-                inArray(teachingAssignments.classSectionId, sectionIds),
-              ),
+              and(eq(teachingAssignments.schoolId, school.id), inArray(teachingAssignments.classSectionId, sectionIds)),
             ),
         ])
       : [[], []];
@@ -418,7 +416,12 @@ export function structureRouter(db: Db) {
 
   // ───────────── Class sections ─────────────
 
-  const assertSectionNameFree = async (academicYearId: string, gradeLevelId: string, name: string, exceptId?: string) => {
+  const assertSectionNameFree = async (
+    academicYearId: string,
+    gradeLevelId: string,
+    name: string,
+    exceptId?: string,
+  ) => {
     const [dup] = await db
       .select({ id: classSections.id })
       .from(classSections)
@@ -503,7 +506,9 @@ export function structureRouter(db: Db) {
     const [dup] = await db
       .select({ id: subjects.id })
       .from(subjects)
-      .where(and(eq(subjects.schoolId, schoolId), eq(subjects.name, name), exceptId ? ne(subjects.id, exceptId) : undefined));
+      .where(
+        and(eq(subjects.schoolId, schoolId), eq(subjects.name, name), exceptId ? ne(subjects.id, exceptId) : undefined),
+      );
     if (dup) throw conflict('توجد مادة بهذا الاسم');
   };
 
@@ -570,7 +575,13 @@ export function structureRouter(db: Db) {
             eq(teachingAssignments.subjectId, body.subjectId),
           ),
         );
-      res.json({ id: null, classSectionId: body.classSectionId, subjectId: body.subjectId, teacherId: null, teacherName: null });
+      res.json({
+        id: null,
+        classSectionId: body.classSectionId,
+        subjectId: body.subjectId,
+        teacherId: null,
+        teacherName: null,
+      });
       return;
     }
 

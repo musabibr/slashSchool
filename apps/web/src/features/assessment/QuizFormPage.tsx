@@ -68,10 +68,12 @@ function QuizForm({
     initialValues: {
       classId: quiz?.classSectionId ?? initialClassId ?? null,
       subjectId: quiz?.subjectId ?? initialSubjectId ?? null,
-      title: quiz?.title ?? (() => {
-        const name = subjectName(initialClassId ?? null, initialSubjectId ?? null);
-        return name ? `اختبار ${name}` : '';
-      })(),
+      title:
+        quiz?.title ??
+        (() => {
+          const name = subjectName(initialClassId ?? null, initialSubjectId ?? null);
+          return name ? `اختبار ${name}` : '';
+        })(),
       details: quiz?.details ?? '',
       date: quiz?.date ?? today,
       maxScore: quiz?.maxScore ?? DEFAULT_MAX_SCORE,
@@ -231,9 +233,7 @@ function QuizForm({
       {quiz && (
         <Modal opened={confirmDelete} onClose={() => setConfirmDelete(false)} title="حذف إعلان الإختبار" centered>
           {locked ? (
-            <Text size="sm">
-              تم رصد درجات لهذا الإختبار. احذف الدرجات من صفحة رصد الدرجات أولاً إذا كنت تريد حذفه.
-            </Text>
+            <Text size="sm">تم رصد درجات لهذا الإختبار. احذف الدرجات من صفحة رصد الدرجات أولاً إذا كنت تريد حذفه.</Text>
           ) : (
             <Text size="sm">هل تريد حذف إعلان «{quiz.title}»؟ سيختفي من صفحات أولياء الأمور.</Text>
           )}
@@ -273,6 +273,9 @@ export function QuizFormPage() {
   const scope = useScope(schoolId);
   const quiz = useAssessment(schoolId, assessmentId);
   const today = scope.data?.school.today ?? null;
+  // Prefill from the quiz list filters, only with a class + subject the user may act on.
+  const initialClass = scope.data?.classes.find((c) => c.id === params.get('classId'));
+  const initialSubject = initialClass?.subjects.find((s) => s.id === params.get('subjectId'));
 
   if (assessmentId) {
     return (
@@ -304,8 +307,8 @@ export function QuizFormPage() {
         <QuizForm
           schoolId={schoolId}
           today={today}
-          initialClassId={params.get('classId')}
-          initialSubjectId={params.get('subjectId')}
+          initialClassId={initialClass?.id ?? null}
+          initialSubjectId={initialSubject?.id ?? null}
         />
       )}
     </MobilePage>

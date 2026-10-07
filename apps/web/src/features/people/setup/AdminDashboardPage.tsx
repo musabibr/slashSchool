@@ -128,7 +128,13 @@ function Meter({ label, value, max, caption }: { label: string; value: number; m
           {pct}%
         </Text>
       </Group>
-      <Progress value={pct} size="lg" radius="sm" aria-label={label} styles={{ root: { background: 'var(--mantine-color-cyan-1)' } }} />
+      <Progress
+        value={pct}
+        size="lg"
+        radius="sm"
+        aria-label={label}
+        styles={{ root: { background: 'var(--mantine-color-cyan-1)' } }}
+      />
       <Text size="xs" c="dimmed" mt={4}>
         {caption}
       </Text>
@@ -350,7 +356,12 @@ export function AdminDashboardPage() {
         {(data) => (
           <Stack gap="md">
             <SimpleGrid cols={{ base: 2, md: 4 }} spacing="md">
-              <StatCard value={data.counts.students} unit="طالب" icon={<IconUsers size={22} />} to={`${base}/students`} />
+              <StatCard
+                value={data.counts.students}
+                unit="طالب"
+                icon={<IconUsers size={22} />}
+                to={`${base}/students`}
+              />
               <StatCard
                 value={data.counts.supervisors}
                 unit="مشرف"

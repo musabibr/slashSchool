@@ -49,14 +49,25 @@ function YearForm({
       name: (v) => (v.trim() ? null : 'اسم العام مطلوب'),
       startsOn: (v) => (v ? null : 'تاريخ البداية مطلوب'),
       endsOn: (v, values) =>
-        !v ? 'تاريخ النهاية مطلوب' : values.startsOn && v <= values.startsOn ? 'تاريخ النهاية يجب أن يكون بعد تاريخ البداية' : null,
+        !v
+          ? 'تاريخ النهاية مطلوب'
+          : values.startsOn && v <= values.startsOn
+            ? 'تاريخ النهاية يجب أن يكون بعد تاريخ البداية'
+            : null,
     },
   });
 
   const submit = form.onSubmit((v) => {
-    const body = { name: v.name.trim(), startsOn: v.startsOn, endsOn: v.endsOn, ...(v.isCurrent ? { isCurrent: true } : {}) };
+    const body = {
+      name: v.name.trim(),
+      startsOn: v.startsOn,
+      endsOn: v.endsOn,
+      ...(v.isCurrent ? { isCurrent: true } : {}),
+    };
     mutation.mutate(
-      year ? { kind: 'update', entity: 'academic-years', id: year.id, body } : { kind: 'create', entity: 'academic-years', body },
+      year
+        ? { kind: 'update', entity: 'academic-years', id: year.id, body }
+        : { kind: 'create', entity: 'academic-years', body },
       {
         onSuccess: () => {
           notifySuccess(year ? 'تم حفظ العام الدراسي' : 'تمت إضافة العام الدراسي');
@@ -75,7 +86,12 @@ function YearForm({
   return (
     <form onSubmit={submit}>
       <Stack gap="sm">
-        <TextInput label="اسم العام الدراسي" placeholder="مثال: 2025/2026" withAsterisk {...form.getInputProps('name')} />
+        <TextInput
+          label="اسم العام الدراسي"
+          placeholder="مثال: 2025/2026"
+          withAsterisk
+          {...form.getInputProps('name')}
+        />
         <Group grow>
           <IsoDateInput
             label="من"
@@ -209,7 +225,12 @@ export function YearsTab({ schoolId, structure }: { schoolId: string; structure:
             initial={
               editing === 'new'
                 ? nextYearDefaults(years, scope.data?.school.today)
-                : { name: editing.name, startsOn: editing.startsOn, endsOn: editing.endsOn, isCurrent: editing.isCurrent }
+                : {
+                    name: editing.name,
+                    startsOn: editing.startsOn,
+                    endsOn: editing.endsOn,
+                    isCurrent: editing.isCurrent,
+                  }
             }
             onDone={() => setEditing(null)}
           />

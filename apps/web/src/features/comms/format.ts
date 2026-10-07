@@ -57,9 +57,7 @@ export function isMonth(value: string | null): value is string {
 
 /** 'الأحد 5/10/2025' for one day, 'من 1/10/2025 إلى 3/10/2025' for a range. */
 export function eventDates(e: Pick<CalendarEvent, 'startsOn' | 'endsOn'>): string {
-  return e.startsOn === e.endsOn
-    ? dayLabel(e.startsOn)
-    : `من ${formatDate(e.startsOn)} إلى ${formatDate(e.endsOn)}`;
+  return e.startsOn === e.endsOn ? dayLabel(e.startsOn) : `من ${formatDate(e.startsOn)} إلى ${formatDate(e.endsOn)}`;
 }
 
 export const coversDay = (e: Pick<CalendarEvent, 'startsOn' | 'endsOn'>, day: string) =>

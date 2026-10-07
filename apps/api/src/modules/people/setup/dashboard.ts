@@ -158,8 +158,8 @@ export function dashboardRouter(db: Db) {
   r.get('/', async (req, res) => {
     const school = schoolOf(req);
     const today = schoolToday(school);
-    const [studentCount, staff, guardianCount, genderRows, byStage, attendance, events, news, fees] =
-      await Promise.all([
+    const [studentCount, staff, guardianCount, genderRows, byStage, attendance, events, news, fees] = await Promise.all(
+      [
         db.select({ n: count() }).from(students).where(activeStudent(school.id)),
         staffCounts(db, school.id),
         db
@@ -193,7 +193,8 @@ export function dashboardRouter(db: Db) {
           .orderBy(desc(announcements.publishedAt))
           .limit(RECENT_ANNOUNCEMENTS),
         feeTotals(db, school.id, today),
-      ]);
+      ],
+    );
 
     const gender = new Map(genderRows.map((g) => [g.gender, g.n]));
     const body: Dashboard = {

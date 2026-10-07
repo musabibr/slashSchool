@@ -71,7 +71,11 @@ describe('staff: announcements', () => {
         .post(annUrl())
         .send({ title: 'تنبيه', body: 'نص', audienceType: c.audienceType, audienceId: c.audienceId });
       expect(res.status).toBe(201);
-      expect(res.body).toMatchObject({ audienceType: c.audienceType, audienceId: c.audienceId, audienceLabel: c.label });
+      expect(res.body).toMatchObject({
+        audienceType: c.audienceType,
+        audienceId: c.audienceId,
+        audienceLabel: c.label,
+      });
     }
   });
 
@@ -185,7 +189,14 @@ describe('staff: announcements', () => {
         isPrimary: true,
         activated: true,
       },
-      { fullName: 'آمنة أحمد', phone: '0912000111', relation: 'mother', whatsapp: null, isPrimary: false, activated: false },
+      {
+        fullName: 'آمنة أحمد',
+        phone: '0912000111',
+        relation: 'mother',
+        whatsapp: null,
+        isPrimary: false,
+        activated: false,
+      },
     ]);
 
     const none = await admin.get(`${annUrl()}/contacts/${t.fx.students.s3.id}`);
@@ -275,7 +286,12 @@ describe('staff: calendar', () => {
   it('admin edits and deletes events; the merged range is validated', async () => {
     const res = await admin.patch(`${calUrl()}/${ids.sports}`).send({ title: 'يوم رياضي مفتوح', endsOn: '2025-10-21' });
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ title: 'يوم رياضي مفتوح', kind: 'event', startsOn: '2025-10-20', endsOn: '2025-10-21' });
+    expect(res.body).toMatchObject({
+      title: 'يوم رياضي مفتوح',
+      kind: 'event',
+      startsOn: '2025-10-20',
+      endsOn: '2025-10-21',
+    });
 
     const cleared = await admin.patch(`${calUrl()}/${ids.holiday}`).send({ details: '' });
     expect(cleared.body.details).toBeNull();
@@ -321,7 +337,13 @@ describe('guardian: home summary and unread badges', () => {
   it('returns the student, school and all nine badges', async () => {
     const body = await summary();
     expect(body).toMatchObject({
-      student: { id: t.fx.students.s1.id, fullName: S1_NAME, code: 'S-1', classLabel: 'الصف الخامس - أ', status: 'active' },
+      student: {
+        id: t.fx.students.s1.id,
+        fullName: S1_NAME,
+        code: 'S-1',
+        classLabel: 'الصف الخامس - أ',
+        status: 'active',
+      },
       school: { id: t.fx.schoolA.id, name: t.fx.schoolA.name, today },
     });
     expect(Object.keys(body.badges).sort()).toEqual([...BADGE_MODULES].sort());
@@ -638,10 +660,7 @@ describe('guardian: home summary and unread badges', () => {
   });
 
   it('a student without a class still gets a summary (class-based badges are zero)', async () => {
-    await t.db
-      .update(s.students)
-      .set({ classSectionId: null })
-      .where(eq(s.students.id, t.fx.students.s3.id));
+    await t.db.update(s.students).set({ classSectionId: null }).where(eq(s.students.id, t.fx.students.s3.id));
     await t.db
       .insert(s.studentGuardians)
       .values({
@@ -698,7 +717,11 @@ describe('demo data', () => {
         expect(res.body.badges.announcements).toBeGreaterThan(0);
         expect(res.body.badges.calendar).toBeGreaterThan(0);
         const news = await agent.get(`/api/students/${child.id}/announcements`);
-        personal.push(...news.body.filter((a: { audienceType: string }) => a.audienceType === 'student').map((a: { id: string }) => a.id));
+        personal.push(
+          ...news.body
+            .filter((a: { audienceType: string }) => a.audienceType === 'student')
+            .map((a: { id: string }) => a.id),
+        );
         const cal = await agent.get(`/api/students/${child.id}/calendar`);
         expect(cal.body.events.length + cal.body.upcoming.length).toBeGreaterThan(0);
       }

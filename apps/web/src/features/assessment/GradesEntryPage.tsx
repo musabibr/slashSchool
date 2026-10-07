@@ -189,20 +189,18 @@ function AssessmentPicker({
   const today = useScope(schoolId).data?.school.today;
   const list = useAssessments(schoolId, { classId, subjectId });
   const items = list.isPlaceholderData ? undefined : list.data;
-  const selected = items?.find((a) => a.id === assessmentId);
-
-  // Preselect the latest assessment that already took place.
-  useEffect(() => {
-    if (!items || selected) return;
-    const fallback = defaultAssessment(items, today);
-    if (fallback && fallback.id !== assessmentId) onChange(fallback.id);
-  }, [items, selected, today, assessmentId, onChange]);
+  // The assessment in the URL, else the latest one that already took place.
+  const selected = items ? (items.find((a) => a.id === assessmentId) ?? defaultAssessment(items, today)) : undefined;
 
   const quizzes = (items ?? []).filter((a) => a.kind === 'quiz');
   const exams = (items ?? []).filter((a) => a.kind !== 'quiz');
   const data = [
-    ...(quizzes.length ? [{ group: 'الاختبارات', items: quizzes.map((a) => ({ value: a.id, label: assessmentLabel(a) })) }] : []),
-    ...(exams.length ? [{ group: 'الإمتحانات', items: exams.map((a) => ({ value: a.id, label: assessmentLabel(a) })) }] : []),
+    ...(quizzes.length
+      ? [{ group: 'الاختبارات', items: quizzes.map((a) => ({ value: a.id, label: assessmentLabel(a) })) }]
+      : []),
+    ...(exams.length
+      ? [{ group: 'الإمتحانات', items: exams.map((a) => ({ value: a.id, label: assessmentLabel(a) })) }]
+      : []),
   ];
 
   return (
@@ -222,11 +220,7 @@ function AssessmentPicker({
             allowDeselect={false}
             comboboxProps={{ withinPortal: true }}
           />
-          {selected ? (
-            <ScoreSheetLoader schoolId={schoolId} assessment={selected} />
-          ) : (
-            <PageLoader />
-          )}
+          {selected ? <ScoreSheetLoader schoolId={schoolId} assessment={selected} /> : <PageLoader />}
         </Stack>
       )}
     </QueryState>

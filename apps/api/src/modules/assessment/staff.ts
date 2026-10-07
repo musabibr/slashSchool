@@ -246,7 +246,9 @@ export function examPeriodsRouter(db: Db) {
           throw conflict(`توجد درجات في ${title} أعلى من الدرجة النهائية الجديدة (أعلى درجة ${top})`);
         }
         const changed = sittings
-          .filter((a) => a.date !== row.date || a.maxScore !== row.maxScore || a.title !== title || a.kind !== period.kind)
+          .filter(
+            (a) => a.date !== row.date || a.maxScore !== row.maxScore || a.title !== title || a.kind !== period.kind,
+          )
           .map((a) => a.id);
         if (changed.length) {
           await tx
@@ -561,9 +563,7 @@ export function assessmentsRouter(db: Db) {
       if (!toDelete.length && !toUpsert.length) return; // nothing changed
 
       if (toDelete.length) {
-        await tx
-          .delete(scores)
-          .where(and(eq(scores.assessmentId, assessment.id), inArray(scores.studentId, toDelete)));
+        await tx.delete(scores).where(and(eq(scores.assessmentId, assessment.id), inArray(scores.studentId, toDelete)));
       }
       for (const { studentId, score } of toUpsert) {
         await tx

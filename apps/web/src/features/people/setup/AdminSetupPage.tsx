@@ -24,10 +24,7 @@ export function AdminSetupPage() {
   const currentYear = q.data?.academicYears.find((y) => y.id === q.data?.currentAcademicYearId);
 
   return (
-    <AdminPage
-      title="الفصول والمواد"
-      subtitle={currentYear ? `العام الدراسي الحالي: ${currentYear.name}` : undefined}
-    >
+    <AdminPage title="الفصول والمواد" subtitle={currentYear ? `العام الدراسي الحالي: ${currentYear.name}` : undefined}>
       <Tabs
         value={tab}
         onChange={(v) => isTab(v) && setParams(v === 'classes' ? {} : { tab: v }, { replace: true })}

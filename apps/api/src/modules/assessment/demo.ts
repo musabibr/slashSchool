@@ -144,7 +144,11 @@ export async function seedAssessmentDemo(db: Db, opts: { today?: string } = {}):
       return ids.size ? schoolSubjects.filter((s) => ids.has(s.id)) : schoolSubjects;
     };
     const rosters = new Map<string, string[]>();
-    for (const c of classes) rosters.set(c.id, (await classStudents(db, c.id)).map((s) => s.id));
+    for (const c of classes)
+      rosters.set(
+        c.id,
+        (await classStudents(db, c.id)).map((s) => s.id),
+      );
 
     const pendingScores: Array<typeof scores.$inferInsert> = [];
     const grade = (assessmentId: string, classId: string, maxScore: number) => {

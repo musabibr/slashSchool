@@ -23,7 +23,17 @@ export function gradesLink(schoolId: string, a: Pick<Assessment, 'id' | 'classSe
   return `/s/${schoolId}/grades${qs({ classId: a.classSectionId, subjectId: a.subjectId, assessmentId: a.id })}`;
 }
 
-function HubButton({ to, icon, children, variant }: { to: string; icon: ReactNode; children: string; variant: string }) {
+function HubButton({
+  to,
+  icon,
+  children,
+  variant,
+}: {
+  to: string;
+  icon: ReactNode;
+  children: string;
+  variant: string;
+}) {
   return (
     <Button
       component={Link}

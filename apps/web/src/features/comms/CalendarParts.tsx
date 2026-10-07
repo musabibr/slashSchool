@@ -82,6 +82,8 @@ export function EventsMonth({
         calendarHeader: { maxWidth: 'none' },
         month: { width: '100%' },
         day: { width: '100%', height: 48 },
+        monthsList: { width: '100%' },
+        monthsListControl: { width: '100%' },
       }}
     />
   );
@@ -131,15 +133,7 @@ function DateCircle({ event }: { event: CalendarEvent }) {
 }
 
 /** One event in a list: date circle, title, kind and dates. Clickable when `onClick` is given (director). */
-export function EventRow({
-  event,
-  onClick,
-  aside,
-}: {
-  event: CalendarEvent;
-  onClick?: () => void;
-  aside?: ReactNode;
-}) {
+export function EventRow({ event, onClick, aside }: { event: CalendarEvent; onClick?: () => void; aside?: ReactNode }) {
   const body = (
     <Paper withBorder radius="md" p="sm">
       <Group wrap="nowrap" align="center" gap="sm">

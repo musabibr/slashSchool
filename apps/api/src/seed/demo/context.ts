@@ -219,3 +219,10 @@ export function subjectNamed(school: SchoolModel, name: string): SubjectModel {
   if (!subject) throw new Error(`demo subject missing: ${name}`);
   return subject;
 }
+
+/** The teacher assigned to a subject in a class (every class × subject has one). */
+export function teacherOf(cls: ClassModel, subjectId: string): string {
+  const id = cls.teacherOf.get(subjectId);
+  if (!id) throw new Error(`demo: no teacher for subject ${subjectId} in ${cls.label}`);
+  return id;
+}

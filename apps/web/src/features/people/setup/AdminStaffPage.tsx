@@ -21,7 +21,7 @@ const COPY: Record<PageRole, { title: string; one: string; empty: string; remove
     title: 'المشرفين',
     one: 'مشرف',
     empty: 'لا يوجد مشرفون بعد',
-    removeNote: 'سيفقد صلاحيات المشرف في المدرسة.',
+    removeNote: 'سيفقد صلاحيات المشرف في المدرسة، ويُلغى توزيع المواد التي يدرّسها ما لم يكن أستاذاً أيضاً.',
   },
   teacher: {
     title: 'الأساتذة',

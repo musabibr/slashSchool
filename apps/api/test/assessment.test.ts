@@ -188,11 +188,15 @@ describe('exam periods (S12)', () => {
       'rows.1.maxScore',
     ]);
 
-    const outside = await agent.put(url).send({ rows: [{ subjectId: t.fx.math.id, date: '2026-08-01', maxScore: 50 }] });
+    const outside = await agent
+      .put(url)
+      .send({ rows: [{ subjectId: t.fx.math.id, date: '2026-08-01', maxScore: 50 }] });
     expect(outside.status).toBe(400);
     expect(outside.body.error.details[0].path).toBe('rows.0.date');
 
-    const foreign = await agent.put(url).send({ rows: [{ subjectId: t.fx.mathB.id, date: '2025-12-07', maxScore: 50 }] });
+    const foreign = await agent
+      .put(url)
+      .send({ rows: [{ subjectId: t.fx.mathB.id, date: '2025-12-07', maxScore: 50 }] });
     expect(foreign.status).toBe(404);
     expect(await sittingsOf(period.id)).toHaveLength(0);
 
@@ -238,7 +242,9 @@ describe('exam periods (S12)', () => {
       .put(`${assessmentsUrl()}/${mathA.id}/scores`)
       .send({ scores: [{ studentId: t.fx.students.s1.id, score: 55 }] });
     expect(scored.status).toBe(200);
-    const remove = await agent.put(url).send({ rows: [{ subjectId: t.fx.science.id, date: '2026-01-13', maxScore: 30 }] });
+    const remove = await agent
+      .put(url)
+      .send({ rows: [{ subjectId: t.fx.science.id, date: '2026-01-13', maxScore: 30 }] });
     expect(remove.status).toBe(409);
     const lower = await agent.put(url).send({
       rows: [
@@ -260,7 +266,9 @@ describe('exam periods (S12)', () => {
     await agent
       .put(`${periodsUrl()}/${period.id}/timetable`)
       .send({ rows: [{ subjectId: t.fx.math.id, date: '2026-02-01', maxScore: 20 }] });
-    const res = await agent.patch(`${periodsUrl()}/${period.id}`).send({ name: 'امتحانات الفترة الثانية', kind: 'term' });
+    const res = await agent
+      .patch(`${periodsUrl()}/${period.id}`)
+      .send({ name: 'امتحانات الفترة الثانية', kind: 'term' });
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ name: 'امتحانات الفترة الثانية', kind: 'term' });
     expect((await sittingsOf(period.id)).every((a) => a.kind === 'term')).toBe(true);
@@ -297,9 +305,9 @@ describe('exam periods (S12)', () => {
     await agent
       .put(`${periodsUrl()}/${period.id}/timetable`)
       .send({ rows: [{ subjectId: t.fx.math.id, date: '2026-02-03', maxScore: 20 }] });
-    expect((await (await as('teacher')).post(`${periodsUrl()}/${period.id}/publish`).send({ published: true })).status).toBe(
-      403,
-    );
+    expect(
+      (await (await as('teacher')).post(`${periodsUrl()}/${period.id}/publish`).send({ published: true })).status,
+    ).toBe(403);
     const on = await agent.post(`${periodsUrl()}/${period.id}/publish`).send({ published: true });
     expect(on.status).toBe(200);
     expect(typeof on.body.resultsPublishedAt).toBe('string');
@@ -345,7 +353,10 @@ describe('period results (staff)', () => {
     const res = await agent.get(`${periodsUrl()}/${periodId}/results?classId=${t.fx.class5a.id}`);
     expect(res.status).toBe(200);
     expect(res.body.classes).toEqual([{ id: t.fx.class5a.id, label: 'الصف الخامس - أ' }]);
-    expect(res.body.subjects.map((x: { subjectName: string }) => x.subjectName)).toEqual(['الرياضيات', 'اللغة العربية']);
+    expect(res.body.subjects.map((x: { subjectName: string }) => x.subjectName)).toEqual([
+      'الرياضيات',
+      'اللغة العربية',
+    ]);
     expect(res.body.students).toHaveLength(3);
     const s1 = res.body.students.find((x: { id: string }) => x.id === t.fx.students.s1.id);
     expect(s1).toMatchObject({ total: 92, max: 100, percentage: 92, grade: 'ممتاز', incomplete: false });
@@ -471,9 +482,9 @@ describe('quiz announcements (S13)', () => {
     // The grade-entry picker: quizzes and exam sittings of one class + subject.
     const pair = await teacher.get(`${assessmentsUrl()}?classId=${t.fx.class5a.id}&subjectId=${t.fx.math.id}`);
     expect(pair.body.some((a: { kind: string }) => a.kind === 'quiz')).toBe(true);
-    expect(pair.body.some((a: { kind: string; examPeriodName: string | null }) => a.kind !== 'quiz' && a.examPeriodName)).toBe(
-      true,
-    );
+    expect(
+      pair.body.some((a: { kind: string; examPeriodName: string | null }) => a.kind !== 'quiz' && a.examPeriodName),
+    ).toBe(true);
 
     const admin = await (await as('admin')).get(`${assessmentsUrl()}?kind=quiz&classId=${t.fx.class5a.id}`);
     expect(admin.body.some((a: { id: string }) => a.id === arabicQuiz.body.id)).toBe(true);
@@ -494,7 +505,12 @@ describe('quiz announcements (S13)', () => {
       .patch(`${assessmentsUrl()}/${quiz.id}`)
       .send({ title: 'اختبار القسمة', date: '2025-10-26', maxScore: 25, details: 'الوحدة الثالثة' });
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ title: 'اختبار القسمة', date: '2025-10-26', maxScore: 25, details: 'الوحدة الثالثة' });
+    expect(res.body).toMatchObject({
+      title: 'اختبار القسمة',
+      date: '2025-10-26',
+      maxScore: 25,
+      details: 'الوحدة الثالثة',
+    });
     const cleared = await teacher.patch(`${assessmentsUrl()}/${quiz.id}`).send({ details: null });
     expect(cleared.body.details).toBeNull();
     expect(cleared.body.title).toBe('اختبار القسمة');
@@ -507,9 +523,7 @@ describe('quiz announcements (S13)', () => {
     const move = await teacher.patch(`${assessmentsUrl()}/${quiz.id}`).send({ classSectionId: t.fx.class6a.id });
     expect(move.status).toBe(403);
     expect((await (await as('adminB')).get(`${assessmentsUrl()}/${quiz.id}`)).status).toBe(403);
-    expect(
-      (await (await as('adminB')).get(`/api/schools/${t.fx.schoolB.id}/assessments/${quiz.id}`)).status,
-    ).toBe(404);
+    expect((await (await as('adminB')).get(`/api/schools/${t.fx.schoolB.id}/assessments/${quiz.id}`)).status).toBe(404);
   });
 
   it('protects scores when editing or deleting a quiz', async () => {
@@ -656,7 +670,8 @@ describe('grade entry (S14 / T7)', () => {
     expect((await (await as('guardian')).put(url).send(body)).status).toBe(403);
     expect((await (await as('adminB')).put(url).send(body)).status).toBe(403);
     expect(
-      (await (await as('adminB')).put(`/api/schools/${t.fx.schoolB.id}/assessments/${quizId}/scores`).send(body)).status,
+      (await (await as('adminB')).put(`/api/schools/${t.fx.schoolB.id}/assessments/${quizId}/scores`).send(body))
+        .status,
     ).toBe(404);
   });
 });
@@ -722,9 +737,7 @@ describe('guardian exams and results (P10–P13)', () => {
       });
     gradedQuizId = (await quiz('اختبار مادة الرياضيات', '2025-10-05')).body.id;
     pendingQuizId = (await quiz('اختبار قادم', '2025-10-20')).body.id;
-    await admin
-      .put(`${assessmentsUrl()}/${gradedQuizId}/scores`)
-      .send({ scores: [{ studentId: s6.id, score: 15 }] });
+    await admin.put(`${assessmentsUrl()}/${gradedQuizId}/scores`).send({ scores: [{ studentId: s6.id, score: 15 }] });
     studentId = s6.id;
   });
 

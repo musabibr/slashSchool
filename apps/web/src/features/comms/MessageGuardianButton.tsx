@@ -63,7 +63,11 @@ function WhatsAppShare({
       <Alert color="teal" icon={<IconCircleCheck />} title="تم إرسال الرسالة">
         ستظهر في قسم الإعلانات في تطبيق ولي الأمر. يمكنك أيضاً إرسالها عبر واتساب:
       </Alert>
-      <QueryState query={contacts} empty="لا توجد أرقام تواصل مسجلة لولي أمر هذا الطالب" isEmpty={(l) => l.length === 0}>
+      <QueryState
+        query={contacts}
+        empty="لا توجد أرقام تواصل مسجلة لولي أمر هذا الطالب"
+        isEmpty={(l) => l.length === 0}
+      >
         {(list) => (
           <Stack gap="xs">
             {list.map((c) => (
@@ -168,7 +172,15 @@ function MessageForm({
           </Chip.Group>
         </div>
         <TextInput label="عنوان الرسالة" required maxLength={200} {...form.getInputProps('title')} />
-        <Textarea label="نص الرسالة" required autosize minRows={4} maxRows={10} maxLength={5000} {...form.getInputProps('body')} />
+        <Textarea
+          label="نص الرسالة"
+          required
+          autosize
+          minRows={4}
+          maxRows={10}
+          maxLength={5000}
+          {...form.getInputProps('body')}
+        />
         {create.error && (
           <Text c="red" size="sm">
             {errorMessage(create.error)}

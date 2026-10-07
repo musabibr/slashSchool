@@ -88,7 +88,10 @@ export function settingsRouter(db: Db) {
   r.use(requireRole('admin'));
 
   r.get('/', async (req, res) => {
-    const [row] = await db.select().from(schools).where(eq(schools.id, schoolOf(req).id));
+    const [row] = await db
+      .select()
+      .from(schools)
+      .where(eq(schools.id, schoolOf(req).id));
     if (!row) throw notFound('المدرسة غير موجودة');
     res.json(toSettings(row));
   });

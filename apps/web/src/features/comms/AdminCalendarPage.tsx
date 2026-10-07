@@ -1,5 +1,17 @@
 import { useState } from 'react';
-import { Button, Grid, Group, Modal, Paper, SegmentedControl, Stack, Text, Textarea, TextInput, Title } from '@mantine/core';
+import {
+  Button,
+  Grid,
+  Group,
+  Modal,
+  Paper,
+  SegmentedControl,
+  Stack,
+  Text,
+  Textarea,
+  TextInput,
+  Title,
+} from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { IconPlus, IconTrash } from '@tabler/icons-react';
 import { CALENDAR_KIND_LABELS, CALENDAR_KINDS, monthBounds, type CalendarKind } from '@slash/shared';
@@ -111,7 +123,15 @@ function EventForm({ schoolId, editing, onDone }: { schoolId: string; editing: E
             error={form.errors.endsOn}
           />
         </Group>
-        <Textarea label="التفاصيل" placeholder="اختياري" autosize minRows={2} maxRows={8} maxLength={2000} {...form.getInputProps('details')} />
+        <Textarea
+          label="التفاصيل"
+          placeholder="اختياري"
+          autosize
+          minRows={2}
+          maxRows={8}
+          maxLength={2000}
+          {...form.getInputProps('details')}
+        />
         <Group justify="space-between" mt="xs">
           {existing ? (
             confirmDelete ? (
@@ -136,7 +156,12 @@ function EventForm({ schoolId, editing, onDone }: { schoolId: string; editing: E
                 </Button>
               </Group>
             ) : (
-              <Button variant="light" color="red" leftSection={<IconTrash size={16} />} onClick={() => setConfirmDelete(true)}>
+              <Button
+                variant="light"
+                color="red"
+                leftSection={<IconTrash size={16} />}
+                onClick={() => setConfirmDelete(true)}
+              >
                 حذف
               </Button>
             )

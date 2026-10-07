@@ -270,7 +270,9 @@ export function AdminSettingsPage() {
   const q = useSettings(schoolId);
   return (
     <AdminPage title="الإعدادات">
-      <QueryState query={q}>{(settings) => <SettingsForm key={schoolId} schoolId={schoolId} settings={settings} />}</QueryState>
+      <QueryState query={q}>
+        {(settings) => <SettingsForm key={schoolId} schoolId={schoolId} settings={settings} />}
+      </QueryState>
     </AdminPage>
   );
 }

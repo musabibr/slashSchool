@@ -60,7 +60,12 @@ describe('dashboard (D1)', () => {
     const session = await one(
       t.db
         .insert(s.attendanceSessions)
-        .values({ schoolId: fx.schoolA.id, classSectionId: fx.class5a.id, date: today, recordedBy: fx.users.supervisor.id })
+        .values({
+          schoolId: fx.schoolA.id,
+          classSectionId: fx.class5a.id,
+          date: today,
+          recordedBy: fx.users.supervisor.id,
+        })
         .returning(),
     );
     await t.db.insert(s.absences).values({ sessionId: session.id, studentId: fx.students.s3.id });
@@ -92,7 +97,10 @@ describe('dashboard (D1)', () => {
 
     // Fees: a 300,000 plan (100,000 overdue + 200,000 not yet due).
     const plan = await one(
-      t.db.insert(s.feePlans).values({ schoolId: fx.schoolA.id, academicYearId: fx.yearA.id, name: 'رسوم' }).returning(),
+      t.db
+        .insert(s.feePlans)
+        .values({ schoolId: fx.schoolA.id, academicYearId: fx.yearA.id, name: 'رسوم' })
+        .returning(),
     );
     await t.db.insert(s.planInstallments).values([
       { feePlanId: plan.id, seq: 1, amount: 100_000, dueDate: '2025-08-01' },
@@ -204,9 +212,9 @@ describe('school structure', () => {
     expect((await adminB.delete(`${b}/subjects/${t.fx.math.id}`)).status).toBe(404);
     expect((await adminB.delete(`${b}/class-sections/${t.fx.class6a.id}`)).status).toBe(404);
     expect((await adminB.patch(`${b}/academic-years/${t.fx.yearA.id}`).send({ name: 'x' })).status).toBe(404);
-    expect(
-      (await adminB.post(`${b}/grade-levels`).send({ stageId: t.fx.stageA.id, name: 'الصف التاسع' })).status,
-    ).toBe(404);
+    expect((await adminB.post(`${b}/grade-levels`).send({ stageId: t.fx.stageA.id, name: 'الصف التاسع' })).status).toBe(
+      404,
+    );
     expect((await adminB.post(`${b}/class-sections`).send({ gradeLevelId: t.fx.grade5.id, name: 'ج' })).status).toBe(
       404,
     );
@@ -262,9 +270,9 @@ describe('school structure', () => {
       expect((await agent.patch(`${base()}/setup/academic-years/${id}`).send({})).status).toBe(400);
 
       // Back to the fixture year; then the empty year can go.
-      expect((await agent.patch(`${base()}/setup/academic-years/${fx.yearA.id}`).send({ isCurrent: true })).status).toBe(
-        200,
-      );
+      expect(
+        (await agent.patch(`${base()}/setup/academic-years/${fx.yearA.id}`).send({ isCurrent: true })).status,
+      ).toBe(200);
       const renamed = await agent.patch(`${base()}/setup/academic-years/${id}`).send({ name: '2026-2027' });
       expect(renamed.body).toMatchObject({ name: '2026-2027', isCurrent: false });
       expect((await agent.delete(`${base()}/setup/academic-years/${id}`)).body).toEqual({ ok: true });
@@ -290,7 +298,9 @@ describe('school structure', () => {
       expect((await agent.post(`${base()}/setup/stages`).send({ name: '' })).status).toBe(400);
       expect((await agent.post(`${base()}/setup/stages`).send({ name: 'س', sort: -1 })).status).toBe(400);
 
-      const grade = await agent.post(`${base()}/setup/grade-levels`).send({ stageId: stage.body.id, name: 'الصف الأول' });
+      const grade = await agent
+        .post(`${base()}/setup/grade-levels`)
+        .send({ stageId: stage.body.id, name: 'الصف الأول' });
       expect(grade.status).toBe(201);
       expect(grade.body).toMatchObject({ stageId: stage.body.id, name: 'الصف الأول', sort: 1 });
       expect(
@@ -299,7 +309,9 @@ describe('school structure', () => {
       expect((await agent.post(`${base()}/setup/grade-levels`).send({ stageId: 'nope', name: 'x' })).status).toBe(400);
 
       // Section defaults to the current year.
-      const section = await agent.post(`${base()}/setup/class-sections`).send({ gradeLevelId: grade.body.id, name: 'أ' });
+      const section = await agent
+        .post(`${base()}/setup/class-sections`)
+        .send({ gradeLevelId: grade.body.id, name: 'أ' });
       expect(section.status).toBe(201);
       expect(section.body).toMatchObject({ name: 'أ', academicYearId: fx.yearA.id, studentCount: 0 });
       expect(
@@ -356,7 +368,9 @@ describe('school structure', () => {
     it('refuses to delete a class that has lessons even without students', async () => {
       const { fx } = t;
       const agent = await t.loginAs(fx.users.admin.phone);
-      const section = await agent.post(`${base()}/setup/class-sections`).send({ gradeLevelId: fx.grade6.id, name: 'د' });
+      const section = await agent
+        .post(`${base()}/setup/class-sections`)
+        .send({ gradeLevelId: fx.grade6.id, name: 'د' });
       await t.db.insert(s.lessons).values({
         schoolId: fx.schoolA.id,
         classSectionId: section.body.id,
@@ -379,14 +393,17 @@ describe('school structure', () => {
       // Another school may use the same name.
       const adminB = await t.loginAs(t.fx.users.adminB.phone);
       expect(
-        (await adminB.post(`/api/schools/${t.fx.schoolB.id}/setup/subjects`).send({ name: 'التربية الإسلامية' })).status,
+        (await adminB.post(`/api/schools/${t.fx.schoolB.id}/setup/subjects`).send({ name: 'التربية الإسلامية' }))
+          .status,
       ).toBe(201);
 
       const renamed = await agent
         .patch(`${base()}/setup/subjects/${created.body.id}`)
         .send({ name: 'القرآن الكريم', sort: 9 });
       expect(renamed.body).toMatchObject({ name: 'القرآن الكريم', sort: 9 });
-      expect((await agent.patch(`${base()}/setup/subjects/${created.body.id}`).send({ name: 'العلوم' })).status).toBe(409);
+      expect((await agent.patch(`${base()}/setup/subjects/${created.body.id}`).send({ name: 'العلوم' })).status).toBe(
+        409,
+      );
       expect((await agent.delete(`${base()}/setup/subjects/${created.body.id}`)).body).toEqual({ ok: true });
     });
 
@@ -408,7 +425,11 @@ describe('school structure', () => {
         .put(url)
         .send({ classSectionId: fx.class6a.id, subjectId: fx.science.id, teacherId: fx.users.teacher2.id });
       expect(set.status).toBe(200);
-      expect(set.body).toMatchObject({ classSectionId: fx.class6a.id, subjectId: fx.science.id, teacherName: 'أستاذ ثاني' });
+      expect(set.body).toMatchObject({
+        classSectionId: fx.class6a.id,
+        subjectId: fx.science.id,
+        teacherName: 'أستاذ ثاني',
+      });
 
       // The teacher can now act on that class/subject.
       const teacher2 = await t.loginAs(fx.users.teacher2.phone);
@@ -426,11 +447,16 @@ describe('school structure', () => {
         .select()
         .from(s.teachingAssignments)
         .where(
-          and(eq(s.teachingAssignments.classSectionId, fx.class6a.id), eq(s.teachingAssignments.subjectId, fx.science.id)),
+          and(
+            eq(s.teachingAssignments.classSectionId, fx.class6a.id),
+            eq(s.teachingAssignments.subjectId, fx.science.id),
+          ),
         );
       expect(rows).toHaveLength(1);
 
-      const removed = await agent.put(url).send({ classSectionId: fx.class6a.id, subjectId: fx.science.id, teacherId: null });
+      const removed = await agent
+        .put(url)
+        .send({ classSectionId: fx.class6a.id, subjectId: fx.science.id, teacherId: null });
       expect(removed.body).toEqual({
         id: null,
         classSectionId: fx.class6a.id,
@@ -454,19 +480,28 @@ describe('school structure', () => {
         expect(res.status).toBe(400);
       }
       expect(
-        (await agent.put(url).send({ classSectionId: fx.classB.id, subjectId: fx.math.id, teacherId: fx.users.teacher.id }))
-          .status,
+        (
+          await agent
+            .put(url)
+            .send({ classSectionId: fx.classB.id, subjectId: fx.math.id, teacherId: fx.users.teacher.id })
+        ).status,
       ).toBe(404);
       expect(
-        (await agent.put(url).send({ classSectionId: fx.class6a.id, subjectId: fx.mathB.id, teacherId: fx.users.teacher.id }))
-          .status,
+        (
+          await agent
+            .put(url)
+            .send({ classSectionId: fx.class6a.id, subjectId: fx.mathB.id, teacherId: fx.users.teacher.id })
+        ).status,
       ).toBe(404);
       // teacherId must be given explicitly (null to remove).
       expect((await agent.put(url).send({ classSectionId: fx.class6a.id, subjectId: fx.math.id })).status).toBe(400);
       const teacher = await t.loginAs(fx.users.teacher.phone);
       expect(
-        (await teacher.put(url).send({ classSectionId: fx.class5a.id, subjectId: fx.math.id, teacherId: fx.users.teacher.id }))
-          .status,
+        (
+          await teacher
+            .put(url)
+            .send({ classSectionId: fx.class5a.id, subjectId: fx.math.id, teacherId: fx.users.teacher.id })
+        ).status,
       ).toBe(403);
     });
   });
@@ -571,7 +606,7 @@ describe('staff', () => {
     }
   });
 
-  it('issues codes only for this school\'s pending staff', async () => {
+  it("issues codes only for this school's pending staff", async () => {
     const agent = await t.loginAs(t.fx.users.admin.phone);
     // A guardian (not staff), another school's admin, an active teacher.
     expect((await agent.post(`${base()}/staff/${t.fx.users.pending.id}/activation-code`)).status).toBe(404);
@@ -742,7 +777,12 @@ describe('settings', () => {
         ],
       },
       { gradeBands: [{ min: 0, label: '' }] },
-      { gradeBands: [{ min: 101, label: 'خارق' }, { min: 0, label: 'ضعيف' }] },
+      {
+        gradeBands: [
+          { min: 101, label: 'خارق' },
+          { min: 0, label: 'ضعيف' },
+        ],
+      },
       { gradeBands: Array.from({ length: 11 }, (_, i) => ({ min: i * 9, label: `ت${i}` })) },
       { weekStart: 7 },
       { weekStart: 1.5 },

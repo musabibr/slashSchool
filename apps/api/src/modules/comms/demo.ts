@@ -77,7 +77,13 @@ const EVENTS: PlannedEvent[] = [
     details: 'تستأنف الدراسة بعد انتهاء العطلة مباشرة',
     addedDaysAgo: 45,
   },
-  { kind: 'meeting', title: 'اجتماع مجلس الآباء', start: 3, details: 'الساعة 10 صباحاً بمسرح المدرسة', addedDaysAgo: 9 },
+  {
+    kind: 'meeting',
+    title: 'اجتماع مجلس الآباء',
+    start: 3,
+    details: 'الساعة 10 صباحاً بمسرح المدرسة',
+    addedDaysAgo: 9,
+  },
   { kind: 'event', title: 'اليوم الرياضي', start: 6, details: 'منافسات بين الفصول وتوزيع جوائز', addedDaysAgo: 2 },
   { kind: 'event', title: 'رحلة علمية إلى المتحف القومي', start: 8, addedDaysAgo: 4 },
   {

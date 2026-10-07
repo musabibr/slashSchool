@@ -153,7 +153,12 @@ export async function periodTimetableRows(db: Db, periodId: string) {
   const bySubject = new Map<string, { subjectId: string; subjectName: string; date: string; maxScore: number }>();
   for (const r of rows) {
     if (!bySubject.has(r.subjectId)) {
-      bySubject.set(r.subjectId, { subjectId: r.subjectId, subjectName: r.subjectName, date: r.date, maxScore: r.maxScore });
+      bySubject.set(r.subjectId, {
+        subjectId: r.subjectId,
+        subjectName: r.subjectName,
+        date: r.date,
+        maxScore: r.maxScore,
+      });
     }
   }
   return [...bySubject.values()];

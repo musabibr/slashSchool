@@ -15,12 +15,7 @@ import { AUDIENCE_COLORS, coversDay, dayLabel, isMonth, localDate, monthTitle } 
 
 function AnnouncementCard({ announcement, isNew }: { announcement: GuardianAnnouncement; isNew: boolean }) {
   return (
-    <Paper
-      withBorder
-      radius="md"
-      p="md"
-      style={isNew ? { borderColor: 'var(--mantine-color-red-3)' } : undefined}
-    >
+    <Paper withBorder radius="md" p="md" style={isNew ? { borderColor: 'var(--mantine-color-red-3)' } : undefined}>
       <Stack gap={6}>
         <Group justify="space-between" wrap="nowrap">
           <Group gap={4} c="dimmed" wrap="nowrap">
@@ -65,7 +60,11 @@ export function GuardianAnnouncementsPage() {
         {(list) => (
           <Stack gap="sm">
             {list.map((a) => (
-              <AnnouncementCard key={a.id} announcement={a} isNew={!!fresh?.has(a.id) || (!fresh && isFetchedAfterMount && a.isNew)} />
+              <AnnouncementCard
+                key={a.id}
+                announcement={a}
+                isNew={!!fresh?.has(a.id) || (!fresh && isFetchedAfterMount && a.isNew)}
+              />
             ))}
           </Stack>
         )}

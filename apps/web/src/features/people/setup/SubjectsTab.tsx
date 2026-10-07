@@ -27,7 +27,8 @@ export function SubjectsTab({ schoolId, structure }: { schoolId: string; structu
       setEditing(null);
     };
     if (editing === 'new') mutation.mutate({ kind: 'create', entity: 'subjects', body: values }, { onSuccess });
-    else if (editing) mutation.mutate({ kind: 'update', entity: 'subjects', id: editing.id, body: values }, { onSuccess });
+    else if (editing)
+      mutation.mutate({ kind: 'update', entity: 'subjects', id: editing.id, body: values }, { onSuccess });
   };
 
   return (

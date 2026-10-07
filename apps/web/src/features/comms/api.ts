@@ -9,6 +9,7 @@ import {
 } from '@tanstack/react-query';
 import type { AudienceType, CalendarKind, Relation } from '@slash/shared';
 import { api, qs } from '../../api/client';
+import type { StudentSummary } from '../../api/types';
 
 // ───────────────────────────── Types (mirror apps/api/src/modules/comms) ─────────────────────────────
 
@@ -105,15 +106,22 @@ function invalidateStudentCaches(qc: QueryClient, module: 'announcements' | 'cal
  * The guardian list endpoints mark the module as seen on the server, so refresh the home badges after
  * each fetch made while mounted (not when the data merely came from the cache).
  */
-function useRefreshSummaryAfterFetch(studentId: string, query: { isSuccess: boolean; dataUpdatedAt: number }) {
+function useRefreshSummaryAfterFetch(
+  studentId: string,
+  module: 'announcements' | 'calendar',
+  query: { isSuccess: boolean; dataUpdatedAt: number },
+) {
   const qc = useQueryClient();
   const lastSynced = useRef(query.dataUpdatedAt);
   const { isSuccess, dataUpdatedAt } = query;
   useEffect(() => {
     if (!isSuccess || dataUpdatedAt === lastSynced.current) return;
     lastSynced.current = dataUpdatedAt;
+    // Nothing to clear when the home badge is already zero.
+    const summary = qc.getQueryData<StudentSummary>(commsKeys.summary(studentId));
+    if (summary && summary.badges[module] === 0) return;
     void qc.invalidateQueries({ queryKey: commsKeys.summary(studentId) });
-  }, [qc, studentId, isSuccess, dataUpdatedAt]);
+  }, [qc, studentId, module, isSuccess, dataUpdatedAt]);
 }
 
 // ───────────────────────────── Guardian ─────────────────────────────
@@ -124,7 +132,7 @@ export function useGuardianAnnouncements(studentId: string) {
     queryFn: () => api.get<GuardianAnnouncement[]>(`/api/students/${studentId}/announcements`),
     refetchOnMount: 'always',
   });
-  useRefreshSummaryAfterFetch(studentId, query);
+  useRefreshSummaryAfterFetch(studentId, 'announcements', query);
   return query;
 }
 
@@ -134,7 +142,7 @@ export function useGuardianCalendar(studentId: string, month: string) {
     queryFn: () => api.get<GuardianCalendar>(`/api/students/${studentId}/calendar${qs({ month })}`),
     placeholderData: keepPreviousData,
   });
-  useRefreshSummaryAfterFetch(studentId, query);
+  useRefreshSummaryAfterFetch(studentId, 'calendar', query);
   return query;
 }
 
@@ -186,12 +194,16 @@ export function useGuardianContacts(schoolId: string, studentId: string, enabled
   });
 }
 
+const STUDENT_SEARCH_LIMIT = 20;
+
 /** Student picker search (the people module's list endpoint). An empty `q` lists the first students. */
 export function useStudentSearch(schoolId: string, q: string) {
   return useQuery({
     queryKey: ['schools', schoolId, 'students', 'search', q],
     queryFn: () =>
-      api.get<{ items: StudentOption[]; total: number }>(`/api/schools/${schoolId}/students${qs({ q: q.trim() })}`),
+      api.get<{ items: StudentOption[]; total: number }>(
+        `/api/schools/${schoolId}/students${qs({ q: q.trim(), limit: STUDENT_SEARCH_LIMIT })}`,
+      ),
     placeholderData: keepPreviousData,
     staleTime: 60_000,
   });

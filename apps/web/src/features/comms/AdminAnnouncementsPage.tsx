@@ -55,7 +55,8 @@ function audienceOptions(classes: ScopeClass[]) {
   };
   for (const c of classes) {
     const g = groupOf(grades, c.stageName);
-    if (!g.items.some((i) => i.value === c.gradeLevelId)) g.items.push({ value: c.gradeLevelId, label: c.gradeLevelName });
+    if (!g.items.some((i) => i.value === c.gradeLevelId))
+      g.items.push({ value: c.gradeLevelId, label: c.gradeLevelName });
     groupOf(sections, c.stageName).items.push({ value: c.id, label: c.label });
   }
   return { grades, sections };
@@ -75,28 +76,28 @@ function ComposeForm({ schoolId, classes }: { schoolId: string; classes: ScopeCl
     },
   });
   const v = form.values;
-  const targetField = { school: null, grade_level: 'gradeLevelId', class_section: 'classId', student: 'student' } as const;
-  const audienceId =
-    v.audienceType === 'grade_level'
-      ? v.gradeLevelId
-      : v.audienceType === 'class_section'
-        ? v.classId
-        : v.audienceType === 'student'
-          ? (v.student?.id ?? null)
-          : null;
-  const targetName =
-    v.audienceType === 'grade_level'
-      ? (classes.find((c) => c.gradeLevelId === v.gradeLevelId)?.gradeLevelName ?? null)
-      : v.audienceType === 'class_section'
-        ? (classes.find((c) => c.id === v.classId)?.label ?? null)
-        : v.audienceType === 'student'
-          ? (v.student?.fullName ?? null)
-          : null;
-  const preview = audiencePreview(v.audienceType, targetName);
+  /** The picked target of the current audience type, its display name and the form field holding it. */
+  const targets: Record<AudienceType, { id: string | null; name: string | null; field: keyof ComposeValues | null }> = {
+    school: { id: null, name: null, field: null },
+    grade_level: {
+      id: v.gradeLevelId,
+      name: classes.find((c) => c.gradeLevelId === v.gradeLevelId)?.gradeLevelName ?? null,
+      field: 'gradeLevelId',
+    },
+    class_section: { id: v.classId, name: classes.find((c) => c.id === v.classId)?.label ?? null, field: 'classId' },
+    student: { id: v.student?.id ?? null, name: v.student?.fullName ?? null, field: 'student' },
+  };
+  const target = targets[v.audienceType];
+  const preview = audiencePreview(v.audienceType, target.name);
 
   const submit = form.onSubmit((values) =>
     create.mutate(
-      { title: values.title.trim(), body: values.body.trim(), audienceType: values.audienceType, audienceId },
+      {
+        title: values.title.trim(),
+        body: values.body.trim(),
+        audienceType: values.audienceType,
+        audienceId: target.id,
+      },
       {
         onSuccess: () => {
           notifySuccess('تم إرسال الإعلان');
@@ -107,7 +108,7 @@ function ComposeForm({ schoolId, classes }: { schoolId: string; classes: ScopeCl
           if (err instanceof ApiError && err.details?.length) {
             const errors: Record<string, string> = {};
             for (const d of err.details) {
-              const field = d.path === 'audienceId' ? targetField[values.audienceType] : d.path;
+              const field = d.path === 'audienceId' ? target.field : d.path;
               if (field && field in values) errors[field] = d.message;
             }
             form.setErrors(errors);
@@ -166,7 +167,15 @@ function ComposeForm({ schoolId, classes }: { schoolId: string; classes: ScopeCl
           />
         )}
         <TextInput label="عنوان الإعلان" required maxLength={200} {...form.getInputProps('title')} />
-        <Textarea label="نص الإعلان" required autosize minRows={4} maxRows={12} maxLength={5000} {...form.getInputProps('body')} />
+        <Textarea
+          label="نص الإعلان"
+          required
+          autosize
+          minRows={4}
+          maxRows={12}
+          maxLength={5000}
+          {...form.getInputProps('body')}
+        />
         {preview && (
           <Text size="sm" c="dimmed">
             سيظهر لأولياء الأمور تحت عنوان:{' '}
@@ -252,9 +261,7 @@ function SentList({ schoolId, canDelete }: { schoolId: string; canDelete: boolea
       </QueryState>
       <Modal opened={!!deleting} onClose={() => setDeleting(null)} title="حذف الإعلان" centered>
         <Stack gap="sm">
-          <Text>
-            هل تريد حذف الإعلان «{deleting?.title}»؟ سيختفي من تطبيق أولياء الأمور.
-          </Text>
+          <Text>هل تريد حذف الإعلان «{deleting?.title}»؟ سيختفي من تطبيق أولياء الأمور.</Text>
           <Group justify="flex-end" gap="xs">
             <Button variant="default" onClick={() => setDeleting(null)}>
               إلغاء
