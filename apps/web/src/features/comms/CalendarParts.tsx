@@ -44,6 +44,7 @@ export function EventsMonth({
       onDateChange={(d) => onMonthChange(String(d).slice(0, 7))}
       maxLevel="year"
       size="md"
+      weekdayFormat="ddd"
       getDayProps={(date) => ({
         selected: date === selectedDay,
         onClick: () => {
@@ -81,6 +82,7 @@ export function EventsMonth({
         levelsGroup: { display: 'block' },
         calendarHeader: { maxWidth: 'none' },
         month: { width: '100%' },
+        weekday: { fontSize: 'var(--mantine-font-size-xs)' },
         day: { width: '100%', height: 48 },
         monthsList: { width: '100%' },
         monthsListControl: { width: '100%' },
