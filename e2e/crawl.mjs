@@ -34,7 +34,10 @@ async function visit(session, role, url, name, viewport) {
     status = `navigation failed: ${e.message.split('\n')[0]}`;
   }
   const problems = session.errors.slice(before);
-  const body = await page.locator('body').innerText().catch(() => '');
+  const body = await page
+    .locator('body')
+    .innerText()
+    .catch(() => '');
   if (body.includes('تعذر تحميل البيانات')) problems.push('error state shown (تعذر تحميل البيانات)');
   if (body.includes('قريباً')) problems.push('placeholder shown (قريباً)');
   if (/الصفحة غير موجودة/.test(body)) problems.push('404 page');
@@ -55,8 +58,10 @@ async function guardian() {
   for (const [i, child] of me.children.entries()) {
     const g = `/g/${child.id}`;
     const tag = `child${i + 1}`;
-    const subjects = (await apiCall(session.context, server, 'GET', `/api/students/${child.id}/subjects?module=lessons`)).body ?? [];
-    const hw = (await apiCall(session.context, server, 'GET', `/api/students/${child.id}/subjects?module=homework`)).body ?? [];
+    const subjects =
+      (await apiCall(session.context, server, 'GET', `/api/students/${child.id}/subjects?module=lessons`)).body ?? [];
+    const hw =
+      (await apiCall(session.context, server, 'GET', `/api/students/${child.id}/subjects?module=homework`)).body ?? [];
     const results = (await apiCall(session.context, server, 'GET', `/api/students/${child.id}/results`)).body ?? [];
     const period = Array.isArray(results) ? results.find((r) => r.type === 'period') : null;
     const pages = [
@@ -86,8 +91,10 @@ async function staff(role) {
   const me = (await apiCall(session.context, server, 'GET', '/api/me')).body;
   const school = me.schools.find((s) => s.roles.includes(role)) ?? me.schools[0];
   const base = `/s/${school.id}`;
-  const lessons = (await apiCall(session.context, server, 'GET', `/api/schools/${school.id}/lessons?limit=1`)).body ?? [];
-  const quizzes = (await apiCall(session.context, server, 'GET', `/api/schools/${school.id}/assessments?kind=quiz`)).body ?? [];
+  const lessons =
+    (await apiCall(session.context, server, 'GET', `/api/schools/${school.id}/lessons?limit=1`)).body ?? [];
+  const quizzes =
+    (await apiCall(session.context, server, 'GET', `/api/schools/${school.id}/assessments?kind=quiz`)).body ?? [];
   const pages = [
     ['home', base],
     ['lessons', `${base}/lessons`],
@@ -126,7 +133,12 @@ async function admin() {
     ['students', `${base}/students`],
     ['admission', `${base}/students/new`],
     ['import', `${base}/students/import`],
-    ...(studentId ? [['student-profile', `${base}/students/${studentId}`], ['student-edit', `${base}/students/${studentId}/edit`]] : []),
+    ...(studentId
+      ? [
+          ['student-profile', `${base}/students/${studentId}`],
+          ['student-edit', `${base}/students/${studentId}/edit`],
+        ]
+      : []),
     ['supervisors', `${base}/supervisors`],
     ['teachers', `${base}/teachers`],
     ['guardians', `${base}/guardians`],
@@ -141,7 +153,8 @@ async function admin() {
   ];
   for (const [name, url] of pages) await visit(session, 'admin', url, name, DESKTOP);
   // The admin student profile tabs, at phone width too.
-  if (studentId) await visit(session, 'admin', `${base}/students/${studentId}`, 'student-profile-desktop-again', DESKTOP);
+  if (studentId)
+    await visit(session, 'admin', `${base}/students/${studentId}`, 'student-profile-desktop-again', DESKTOP);
   await session.close();
 }
 
@@ -155,5 +168,7 @@ try {
 const failed = report.filter((r) => r.problems.length);
 fs.mkdirSync(SHOTS_DIR, { recursive: true });
 fs.writeFileSync(path.join(SHOTS_DIR, 'report.json'), JSON.stringify(report, null, 2));
-console.log(`\n${report.length - failed.length}/${report.length} screens clean. Screenshots + report.json in ${SHOTS_DIR}`);
+console.log(
+  `\n${report.length - failed.length}/${report.length} screens clean. Screenshots + report.json in ${SHOTS_DIR}`,
+);
 process.exit(failed.length ? 1 : 0);
