@@ -1,5 +1,5 @@
 import { Router, type Request } from 'express';
-import { and, eq, gte, inArray, lte, max, type SQL } from 'drizzle-orm';
+import { and, eq, gt, gte, inArray, lte, max, type SQL } from 'drizzle-orm';
 import { dateRangeBounds } from '@slash/shared';
 import type { Db } from '../../db/client';
 import { homeworkDone, lessons, studentGuardians, subjects, teachingAssignments } from '../../db/schema';
@@ -27,11 +27,18 @@ export interface GuardianHomeworkDto extends GuardianLessonDto {
   done: boolean;
 }
 
+interface SeenBaseline {
+  /** When the guardian last opened this subject (or was linked to the student, if never). */
+  of(subjectId: string): Date;
+  /** The oldest of those moments: nothing created before it can count towards a badge. */
+  oldest: Date;
+}
+
 /**
  * For guardians: "last seen" per subject of a module — the subject cursor, else the moment the guardian
  * was linked to the student. Returns null for staff (they have no badges).
  */
-async function seenBaseline(db: Db, req: Request, module: LessonModule): Promise<((subjectId: string) => Date) | null> {
+async function seenBaseline(db: Db, req: Request, module: LessonModule): Promise<SeenBaseline | null> {
   const student = studentOf(req);
   if (student.access !== 'guardian') return null;
   const userId = userOf(req).id;
@@ -43,7 +50,12 @@ async function seenBaseline(db: Db, req: Request, module: LessonModule): Promise
       .where(and(eq(studentGuardians.studentId, student.id), eq(studentGuardians.userId, userId))),
   ]);
   const fallback = link?.createdAt ?? new Date(0);
-  return (subjectId) => cursors.get(cursorKey(module, subjectId)) ?? fallback;
+  const prefix = cursorKey(module, '');
+  let oldest = fallback;
+  for (const [key, seenAt] of cursors) {
+    if (key.startsWith(prefix) && key !== prefix && seenAt < oldest) oldest = seenAt;
+  }
+  return { of: (subjectId) => cursors.get(cursorKey(module, subjectId)) ?? fallback, oldest };
 }
 
 /** Lessons of the student's current class (only those with homework for the homework module). */
@@ -95,9 +107,11 @@ export function guardianLessonsRouter(db: Db) {
       const created = await db
         .select({ subjectId: lessons.subjectId, createdAt: lessons.createdAt })
         .from(lessons)
-        .where(where);
+        .where(and(where, gt(lessons.createdAt, baseline.oldest)));
       for (const row of created) {
-        if (row.createdAt > baseline(row.subjectId)) badges.set(row.subjectId, (badges.get(row.subjectId) ?? 0) + 1);
+        if (row.createdAt > baseline.of(row.subjectId)) {
+          badges.set(row.subjectId, (badges.get(row.subjectId) ?? 0) + 1);
+        }
       }
     }
 
@@ -153,7 +167,7 @@ export function guardianLessonsRouter(db: Db) {
       homeworkDueDate: r.homeworkDueDate,
       teacherName: r.teacherName,
       attachments: attachments.get(r.id) ?? [],
-      isNew: baseline ? r.createdAt > baseline(r.subjectId) : false,
+      isNew: baseline ? r.createdAt > baseline.of(r.subjectId) : false,
       createdAt: r.createdAt.toISOString(),
     }));
   }

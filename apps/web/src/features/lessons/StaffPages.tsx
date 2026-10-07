@@ -74,7 +74,17 @@ function StaffLessonCard({
   );
 }
 
-function HubButton({ to, icon, children, variant }: { to: string; icon: ReactNode; children: string; variant: string }) {
+function HubButton({
+  to,
+  icon,
+  children,
+  variant,
+}: {
+  to: string;
+  icon: ReactNode;
+  children: string;
+  variant: string;
+}) {
   return (
     <Button
       component={Link}

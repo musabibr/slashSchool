@@ -51,12 +51,10 @@ describe('staff: record and edit absence', () => {
 
   it('records absences with notes (S9) and returns the checklist', async () => {
     const agent = await t.loginAs(t.fx.users.supervisor.phone);
-    const res = await agent
-      .put(`${base()}/${t.fx.class5a.id}/${PAST}`)
-      .send({
-        absentStudentIds: [t.fx.students.s1.id, t.fx.students.s2.id],
-        notes: { [t.fx.students.s2.id]: ' مريض ' },
-      });
+    const res = await agent.put(`${base()}/${t.fx.class5a.id}/${PAST}`).send({
+      absentStudentIds: [t.fx.students.s1.id, t.fx.students.s2.id],
+      notes: { [t.fx.students.s2.id]: ' مريض ' },
+    });
     expect(res.status).toBe(200);
     expect(res.body.recorded).toBe(true);
     expect(res.body.recordedByName).toBe('مشرف أ');
@@ -82,12 +80,10 @@ describe('staff: record and edit absence', () => {
   it('is idempotent: repeating the same save changes nothing', async () => {
     const agent = await t.loginAs(t.fx.users.supervisor.phone);
     const before = await agent.get(`${base()}/${t.fx.class5a.id}/${PAST}`);
-    const res = await agent
-      .put(`${base()}/${t.fx.class5a.id}/${PAST}`)
-      .send({
-        absentStudentIds: [t.fx.students.s2.id, t.fx.students.s1.id, t.fx.students.s1.id],
-        notes: { [t.fx.students.s2.id]: 'مريض' },
-      });
+    const res = await agent.put(`${base()}/${t.fx.class5a.id}/${PAST}`).send({
+      absentStudentIds: [t.fx.students.s2.id, t.fx.students.s1.id, t.fx.students.s1.id],
+      notes: { [t.fx.students.s2.id]: 'مريض' },
+    });
     expect(res.status).toBe(200);
     expect(res.body).toEqual(before.body);
     const sessions = await t.db

@@ -103,7 +103,10 @@ afterAll(() => t.close());
 describe('staff: create', () => {
   it('teacher adds a lesson with homework and an attachment (date defaults to school today)', async () => {
     const fileId = await upload(teacher, t.fx.schoolA.id);
-    const lesson = await create(teacher, mathLesson({ attachmentIds: [fileId, fileId], homeworkDueDate: addDays(today, 2) }));
+    const lesson = await create(
+      teacher,
+      mathLesson({ attachmentIds: [fileId, fileId], homeworkDueDate: addDays(today, 2) }),
+    );
     expect(lesson).toMatchObject({
       classSectionId: t.fx.class5a.id,
       classLabel: 'الصف الخامس - أ',
@@ -322,7 +325,12 @@ describe('staff: update & delete', () => {
 
     const noHw = await teacher.patch(staffUrl(`/${lesson.id}`)).send({ hasHomework: false, attachmentIds: [] });
     expect(noHw.status).toBe(200);
-    expect(noHw.body).toMatchObject({ hasHomework: false, homeworkDetails: null, homeworkDueDate: null, attachments: [] });
+    expect(noHw.body).toMatchObject({
+      hasHomework: false,
+      homeworkDetails: null,
+      homeworkDueDate: null,
+      attachments: [],
+    });
 
     const missing = await teacher.patch(staffUrl(`/${lesson.id}`)).send({ hasHomework: true });
     expect(missing.status).toBe(400);
@@ -575,9 +583,9 @@ describe('guardian: subjects, lessons and homework', () => {
       expect(res.body).toEqual([]);
     }
     const anyLesson = await create(teacher, mathLesson());
-    expect((await guardian2.put(studentUrl(student.id, `/homework/${anyLesson.id}/done`)).send({ done: true })).status).toBe(
-      404,
-    );
+    expect(
+      (await guardian2.put(studentUrl(student.id, `/homework/${anyLesson.id}/done`)).send({ done: true })).status,
+    ).toBe(404);
     expect((await guardian2.get(studentUrl(student.id, '/subjects?module=fees'))).status).toBe(400);
   });
 });

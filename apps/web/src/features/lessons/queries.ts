@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   keepPreviousData,
   useInfiniteQuery,
@@ -50,8 +50,12 @@ export function useGuardianSubjects(studentId: string, module: LessonModule, { f
     refetchOnMount: fresh ? 'always' : true,
   });
   const { isSuccess, dataUpdatedAt } = query;
+  // Only after a fetch made while mounted (not when the tiles merely came from the cache).
+  const lastSynced = useRef(dataUpdatedAt);
   useEffect(() => {
-    if (isSuccess) void qc.invalidateQueries({ queryKey: ['students', studentId, 'summary'] });
+    if (!isSuccess || dataUpdatedAt === lastSynced.current) return;
+    lastSynced.current = dataUpdatedAt;
+    void qc.invalidateQueries({ queryKey: ['students', studentId, 'summary'] });
   }, [qc, studentId, isSuccess, dataUpdatedAt]);
   return query;
 }
