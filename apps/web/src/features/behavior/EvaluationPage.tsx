@@ -85,6 +85,7 @@ export function EvaluationPage() {
           schoolId={schoolId}
           classId={selection.classId}
           subjectId={selection.subjectId}
+          autoSelect
           required
           onChange={({ classId, subjectId }) => setSelection({ classId, subjectId, date: selection.date })}
         />

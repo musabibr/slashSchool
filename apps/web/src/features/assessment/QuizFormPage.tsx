@@ -150,6 +150,7 @@ function QuizForm({
               schoolId={schoolId}
               classId={form.values.classId}
               subjectId={form.values.subjectId}
+              autoSelect
               required
               onChange={({ classId, subjectId }) => {
                 form.setValues({ classId, subjectId });

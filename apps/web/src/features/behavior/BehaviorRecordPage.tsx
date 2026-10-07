@@ -135,6 +135,7 @@ function BehaviorRecordForm({ schoolId, today }: { schoolId: string; today: stri
               schoolId={schoolId}
               classId={form.values.classId}
               withSubject={false}
+              autoSelect
               required
               onChange={({ classId }) => {
                 form.setValues({ classId, studentId: null });

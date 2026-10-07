@@ -55,6 +55,7 @@ export function AttendanceForm({
           schoolId={schoolId}
           classId={classId}
           withSubject={false}
+          autoSelect
           required
           onChange={(next) => onChange({ classId: next.classId, date })}
         />

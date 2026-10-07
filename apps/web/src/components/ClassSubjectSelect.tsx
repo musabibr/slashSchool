@@ -1,9 +1,12 @@
+import { useEffect, useRef } from 'react';
 import { Group, Select } from '@mantine/core';
 import { useScope } from '../api/hooks';
 
 /**
  * "اختر الفصل/الصف" + "اختر المادة" pickers fed by the staff scope (teachers see only their classes/subjects).
  * Changing the class clears a subject that is not offered in the new class.
+ * `autoSelect` picks the first class (and its first subject) once on entry when nothing is selected,
+ * so a teacher with one class lands straight on its data.
  */
 export function ClassSubjectSelect({
   schoolId,
@@ -13,6 +16,7 @@ export function ClassSubjectSelect({
   withSubject = true,
   required = false,
   clearable = false,
+  autoSelect = false,
 }: {
   schoolId: string;
   classId: string | null;
@@ -21,9 +25,19 @@ export function ClassSubjectSelect({
   withSubject?: boolean;
   required?: boolean;
   clearable?: boolean;
+  autoSelect?: boolean;
 }) {
   const scope = useScope(schoolId);
   const classes = scope.data?.classes ?? [];
+  const autoDone = useRef(false);
+  useEffect(() => {
+    if (!autoSelect || autoDone.current || !scope.data) return;
+    autoDone.current = true;
+    const first = scope.data.classes[0];
+    if (!classId && first) {
+      onChange({ classId: first.id, subjectId: withSubject ? (first.subjects[0]?.id ?? null) : null });
+    }
+  }, [autoSelect, scope.data, classId, withSubject, onChange]);
   const selected = classes.find((c) => c.id === classId);
   const subjects = selected?.subjects ?? [];
   return (

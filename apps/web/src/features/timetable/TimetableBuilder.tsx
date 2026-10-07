@@ -39,6 +39,7 @@ export function TimetableBuilder({ schoolId }: { schoolId: string }) {
         schoolId={schoolId}
         classId={classId}
         withSubject={false}
+        autoSelect
         required
         onChange={(next) => setClassId(next.classId)}
       />

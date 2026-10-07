@@ -268,6 +268,7 @@ export function GradesEntryPage() {
             schoolId={schoolId}
             classId={validClass}
             subjectId={validSubject}
+            autoSelect
             required
             onChange={(next) => set({ ...next, assessmentId: null })}
           />
