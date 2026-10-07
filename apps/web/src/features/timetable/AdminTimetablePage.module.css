@@ -1,0 +1,9 @@
+.cell {
+  border-radius: 0;
+  transition: background-color 120ms ease;
+}
+
+.cell:hover,
+.cell:focus-visible {
+  background-color: var(--mantine-color-cyan-0);
+}
