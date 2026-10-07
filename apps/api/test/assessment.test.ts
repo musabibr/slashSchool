@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { and, eq } from 'drizzle-orm';
 import * as s from '../src/db/schema';
-import { countNewExams, countNewResults, seedAssessmentDemo } from '../src/modules/assessment';
+import { countNewExams, countNewResults } from '../src/modules/assessment';
 import { setupTestApp, type TestContext } from './helpers';
 
 let t: TestContext;
@@ -904,45 +904,5 @@ describe('guardian exams and results (P10–P13)', () => {
       .update(s.students)
       .set({ classSectionId: t.fx.class5a.id })
       .where(eq(s.students.id, t.fx.students.s2.id));
-  });
-});
-
-// ───────────────────────────── Demo data ─────────────────────────────
-
-describe('demo data', () => {
-  let demo: TestContext;
-  beforeAll(async () => {
-    demo = await setupTestApp();
-    await seedAssessmentDemo(demo.db, { today: '2026-03-15' });
-  });
-  afterAll(() => demo.close());
-
-  it('prefills periods, quizzes and scores the guardian can browse', async () => {
-    const guardian = await demo.loginAs(demo.fx.users.guardian.phone);
-    const exams = await guardian.get(`${studentUrl(demo.fx.students.s1.id)}/exams`);
-    expect(exams.status).toBe(200);
-    expect(exams.body.timetables.map((p: { kind: string }) => p.kind).sort()).toEqual(['monthly', 'term', 'weekly']);
-    expect(exams.body.quizzes.length).toBeGreaterThan(0);
-    expect(exams.body.quizzes.some((q: { score: number | null }) => q.score !== null)).toBe(true);
-    expect(exams.body.quizzes.some((q: { score: number | null }) => q.score === null)).toBe(true);
-
-    const results = await guardian.get(`${studentUrl(demo.fx.students.s1.id)}/results`);
-    const periods = results.body.filter((r: { type: string }) => r.type === 'period');
-    expect(periods).toHaveLength(1); // only the published monthly exams
-    expect(periods[0].kind).toBe('monthly');
-    const sheet = await guardian.get(`${studentUrl(demo.fx.students.s1.id)}/results/${periods[0].id}`);
-    expect(sheet.status).toBe(200);
-    expect(sheet.body.incomplete).toBe(false);
-    expect(sheet.body.grade).not.toBe('');
-
-    // School B gets its own data too.
-    const b = await guardian.get(`${studentUrl(demo.fx.students.s4.id)}/exams`);
-    expect(b.body.timetables.length).toBe(3);
-
-    // Staff can publish the graded weekly exam.
-    const admin = await demo.loginAs(demo.fx.users.admin.phone);
-    const list = await admin.get(`/api/schools/${demo.fx.schoolA.id}/exam-periods?gradeLevelId=${demo.fx.grade5.id}`);
-    const weekly = list.body.find((p: { kind: string }) => p.kind === 'weekly');
-    expect(weekly).toMatchObject({ resultsPublishedAt: null, hasScores: true });
   });
 });

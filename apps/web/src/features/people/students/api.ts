@@ -1,7 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Gender, Relation, StudentStatus, UserStatus } from '@slash/shared';
-import { api, ApiError, qs } from '../../../api/client';
-import type { Scope } from '../../../api/types';
+import { api, qs } from '../../../api/client';
 
 // ───────────────────────────── Types (mirror apps/api/src/modules/people/students) ─────────────────────────────
 
@@ -194,7 +193,13 @@ export interface GuardianListItem {
   status: UserStatus;
   lastLoginAt: string | null;
   canIssueCode: boolean;
-  children: Array<{ studentId: string; fullName: string; classLabel: string | null; status: StudentStatus; relation: Relation }>;
+  children: Array<{
+    studentId: string;
+    fullName: string;
+    classLabel: string | null;
+    status: StudentStatus;
+    relation: Relation;
+  }>;
 }
 
 /** GET /setup/structure (school structure: stage → grade level → class sections of the current year). */
@@ -266,34 +271,11 @@ export function useStudentProfile(schoolId: string, studentId: string | undefine
   });
 }
 
-/** Stage → grade level → class, built from the staff scope (current year's classes only). */
-function structureFromScope(scope: Scope): SchoolStructure {
-  const stages: SchoolStructure['stages'] = [];
-  for (const c of scope.classes) {
-    let stage = stages.find((s) => s.name === c.stageName);
-    if (!stage) stages.push((stage = { id: `stage:${c.stageName}`, name: c.stageName, gradeLevels: [] }));
-    let grade = stage.gradeLevels.find((g) => g.id === c.gradeLevelId);
-    if (!grade) stage.gradeLevels.push((grade = { id: c.gradeLevelId, name: c.gradeLevelName, classSections: [] }));
-    grade.classSections.push({ id: c.id, name: c.name });
-  }
-  return { stages };
-}
-
-/**
- * The school structure for the D3 pickers. Reads GET /setup/structure; if that endpoint is not
- * available (404), falls back to the classes of the staff scope.
- */
+/** The school structure for the D3 pickers (GET /setup/structure: the current year's tree). */
 export function useSchoolStructure(schoolId: string) {
   return useQuery({
     queryKey: studentKeys.structure(schoolId),
-    queryFn: async () => {
-      try {
-        return await api.get<SchoolStructure>(`${base(schoolId)}/setup/structure`);
-      } catch (err) {
-        if (!(err instanceof ApiError) || err.status !== 404) throw err;
-        return structureFromScope(await api.get<Scope>(`${base(schoolId)}/lookups/scope`));
-      }
-    },
+    queryFn: () => api.get<SchoolStructure>(`${base(schoolId)}/setup/structure`),
   });
 }
 

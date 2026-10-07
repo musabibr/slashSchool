@@ -2,7 +2,6 @@ import type { ModuleDeps, ModuleRouters } from '../types';
 import { guardianFeesRouter } from './guardian';
 import { staffFeesRouter } from './staff';
 
-export { seedFeesDemo } from './demo';
 
 /**
  * Fees, recorded by hand (P9, admin fees page, student profile panel, fee notice).

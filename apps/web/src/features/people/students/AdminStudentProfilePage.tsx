@@ -237,7 +237,12 @@ function Profile({ schoolId, student }: { schoolId: string; student: StudentProf
     if (scroll) requestAnimationFrame(() => tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   };
 
-  const fullName4 = joinName(student.firstName, student.fatherName, student.grandfatherName, student.greatGrandfatherName);
+  const fullName4 = joinName(
+    student.firstName,
+    student.fatherName,
+    student.grandfatherName,
+    student.greatGrandfatherName,
+  );
   const panelFallback = (
     <Group justify="center" py="lg">
       <Loader size="sm" />
@@ -310,7 +315,11 @@ function Profile({ schoolId, student }: { schoolId: string; student: StudentProf
                   <Button variant="light" leftSection={<IconGavel size={16} />} onClick={() => openTab('behavior')}>
                     مخالفة السلوك والإنضباط
                   </Button>
-                  <Button variant="light" leftSection={<IconCalendarX size={16} />} onClick={() => openTab('attendance')}>
+                  <Button
+                    variant="light"
+                    leftSection={<IconCalendarX size={16} />}
+                    onClick={() => openTab('attendance')}
+                  >
                     الغياب و الحضور
                   </Button>
                   <Button variant="light" leftSection={<IconChartBar size={16} />} onClick={() => openTab('results')}>
@@ -320,7 +329,11 @@ function Profile({ schoolId, student }: { schoolId: string; student: StudentProf
                 <Group gap="xs">
                   {student.status === 'active' ? (
                     <>
-                      <Button color="red" leftSection={<IconUserOff size={16} />} onClick={() => setStatusAction('expelled')}>
+                      <Button
+                        color="red"
+                        leftSection={<IconUserOff size={16} />}
+                        onClick={() => setStatusAction('expelled')}
+                      >
                         فصل طالب
                       </Button>
                       <Button

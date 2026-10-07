@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, Anchor, Button, Paper, PasswordInput, Stack, Text, TextInput } from '@mantine/core';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import { api } from '../api/client';
 import { errorMessage } from '../lib/notify';
 import { Brand } from './Brand';
@@ -16,7 +16,9 @@ interface Preview {
 export function ActivatePage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [code, setCode] = useState('');
+  const [params] = useSearchParams();
+  // WhatsApp activation links carry the code (/activate?code=…) so it never has to be typed.
+  const [code, setCode] = useState(() => params.get('code') ?? '');
   const [pin, setPin] = useState('');
   const [pin2, setPin2] = useState('');
   const [preview, setPreview] = useState<Preview | null>(null);
@@ -33,6 +35,14 @@ export function ActivatePage() {
     },
   });
   const mismatch = pin2.length > 0 && pin !== pin2;
+
+  const autoChecked = useRef(false);
+  useEffect(() => {
+    if (!autoChecked.current && params.get('code')) {
+      autoChecked.current = true;
+      check.mutate();
+    }
+  }, [params, check]);
 
   return (
     <div className="mobile-frame">

@@ -3,7 +3,6 @@ import { guardianExamsRouter } from './guardian';
 import { assessmentsRouter, examPeriodsRouter } from './staff';
 
 export { countNewExams, countNewResults } from './badges';
-export { seedAssessmentDemo } from './demo';
 
 /**
  * Exams, quizzes, grades and results.

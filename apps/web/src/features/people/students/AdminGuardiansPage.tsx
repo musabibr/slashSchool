@@ -1,5 +1,17 @@
 import { useState } from 'react';
-import { Anchor, Badge, Group, Pagination, Paper, Select, Stack, Table, Text, TextInput } from '@mantine/core';
+import {
+  Anchor,
+  Badge,
+  Group,
+  Pagination,
+  Paper,
+  Select,
+  SimpleGrid,
+  Stack,
+  Table,
+  Text,
+  TextInput,
+} from '@mantine/core';
 import { useDebouncedCallback } from '@mantine/hooks';
 import { IconSearch } from '@tabler/icons-react';
 import { Link, useSearchParams } from 'react-router';
@@ -46,7 +58,7 @@ export function AdminGuardiansPage() {
     <AdminPage title="أولياء الأمور" subtitle={list.data ? `عدد أولياء الأمور: ${list.data.total}` : undefined}>
       <Paper withBorder radius="md" p="md">
         <Stack gap="md">
-          <Group grow align="flex-end" gap="sm" wrap="wrap">
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
             <TextInput
               label="بحث"
               placeholder="إبحث بالاسم أو رقم الهاتف أو اسم الطالب"
@@ -56,7 +68,6 @@ export function AdminGuardiansPage() {
                 setSearch(e.currentTarget.value);
                 syncSearch(e.currentTarget.value);
               }}
-              miw={240}
             />
             <Select
               label="حالة الحساب"
@@ -65,13 +76,14 @@ export function AdminGuardiansPage() {
               value={status}
               onChange={(v) => update({ status: v, page: null })}
               clearable
-              miw={160}
             />
-          </Group>
+          </SimpleGrid>
 
           <QueryState
             query={list}
-            empty={q || status ? 'لا يوجد أولياء أمور مطابقون للبحث' : 'لا يوجد أولياء أمور بعد — يُضافون عند تسجيل الطلاب'}
+            empty={
+              q || status ? 'لا يوجد أولياء أمور مطابقون للبحث' : 'لا يوجد أولياء أمور بعد — يُضافون عند تسجيل الطلاب'
+            }
             isEmpty={(d) => d.items.length === 0}
           >
             {(data) => (

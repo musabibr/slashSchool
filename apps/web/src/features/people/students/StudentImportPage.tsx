@@ -188,7 +188,13 @@ function ImportDone({
     downloadCsv(
       'رموز-تفعيل-أولياء-الأمور.csv',
       ['اسم ولي الامر', 'رقم ولي الامر', 'رمز التفعيل', 'الطلاب', 'رابط واتساب'],
-      result.codes.map((c) => [c.guardianName, c.phone, c.code, c.students.join('، '), whatsappLink(c.phone, message(c))]),
+      result.codes.map((c) => [
+        c.guardianName,
+        c.phone,
+        c.code,
+        c.students.join('، '),
+        whatsappLink(c.phone, message(c)),
+      ]),
     );
   return (
     <Stack gap="md">
@@ -318,7 +324,12 @@ export function StudentImportPage() {
       title="استيراد الطلاب"
       subtitle="تسجيل عدد كبير من الطلاب وأولياء أمورهم من ملف CSV"
       actions={
-        <Button variant="default" component={Link} to={`/a/${schoolId}/students`} leftSection={<IconArrowRight size={16} />}>
+        <Button
+          variant="default"
+          component={Link}
+          to={`/a/${schoolId}/students`}
+          leftSection={<IconArrowRight size={16} />}
+        >
           الرجوع
         </Button>
       }
@@ -339,8 +350,8 @@ export function StudentImportPage() {
               <List size="sm" spacing={2}>
                 <List.Item>الجنس: ذكر أو أنثى.</List.Item>
                 <List.Item>
-                  السنة الدراسية والفصل كما في صفحة الفصول والمواد{example ? ` (مثال: ${example.gradeLevelName} / ${example.name})` : ''}
-                  ، والفصل اختياري.
+                  السنة الدراسية والفصل كما في صفحة الفصول والمواد
+                  {example ? ` (مثال: ${example.gradeLevelName} / ${example.name})` : ''}، والفصل اختياري.
                 </List.Item>
                 <List.Item>تاريخ الميلاد اختياري بصيغة 2015-03-04 أو 4/3/2015.</List.Item>
                 <List.Item>
@@ -469,37 +480,37 @@ export function StudentImportPage() {
                         return (
                           <Fragment key={i}>
                             <Table.Tr bg={errors ? 'red.0' : undefined}>
-                            <Table.Td>{i + 1}</Table.Td>
-                            <Table.Td>
-                              {joinName(
-                                r.studentFirstName,
-                                r.studentFatherName,
-                                r.studentGrandfatherName,
-                                r.studentGreatGrandfatherName,
-                              )}
-                            </Table.Td>
-                            <Table.Td>{r.gender}</Table.Td>
-                            <Table.Td>{r.gradeLevel}</Table.Td>
-                            <Table.Td>{r.classSection}</Table.Td>
-                            <Table.Td dir="ltr" style={{ textAlign: 'right' }}>
-                              {r.birthDate}
-                            </Table.Td>
-                            <Table.Td>{r.guardianName}</Table.Td>
-                            <Table.Td dir="ltr" style={{ textAlign: 'right' }}>
-                              {r.guardianPhone}
-                            </Table.Td>
-                            <Table.Td>{r.relation}</Table.Td>
-                          </Table.Tr>
-                          {errors && (
-                            <Table.Tr bg="red.0">
-                              <Table.Td />
-                              <Table.Td colSpan={8}>
-                                <Text size="xs" c="red.8">
-                                  {errors.join('، ')}
-                                </Text>
+                              <Table.Td>{i + 1}</Table.Td>
+                              <Table.Td>
+                                {joinName(
+                                  r.studentFirstName,
+                                  r.studentFatherName,
+                                  r.studentGrandfatherName,
+                                  r.studentGreatGrandfatherName,
+                                )}
                               </Table.Td>
+                              <Table.Td>{r.gender}</Table.Td>
+                              <Table.Td>{r.gradeLevel}</Table.Td>
+                              <Table.Td>{r.classSection}</Table.Td>
+                              <Table.Td dir="ltr" style={{ textAlign: 'right' }}>
+                                {r.birthDate}
+                              </Table.Td>
+                              <Table.Td>{r.guardianName}</Table.Td>
+                              <Table.Td dir="ltr" style={{ textAlign: 'right' }}>
+                                {r.guardianPhone}
+                              </Table.Td>
+                              <Table.Td>{r.relation}</Table.Td>
                             </Table.Tr>
-                          )}
+                            {errors && (
+                              <Table.Tr bg="red.0">
+                                <Table.Td />
+                                <Table.Td colSpan={8}>
+                                  <Text size="xs" c="red.8">
+                                    {errors.join('، ')}
+                                  </Text>
+                                </Table.Td>
+                              </Table.Tr>
+                            )}
                           </Fragment>
                         );
                       })}

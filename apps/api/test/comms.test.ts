@@ -5,7 +5,6 @@ import { addDays, BADGE_MODULES, todayIn, type BadgeModule } from '@slash/shared
 import { createApp } from '../src/app';
 import { connectPglite } from '../src/db/client';
 import * as s from '../src/db/schema';
-import { seedCommsDemo } from '../src/modules/comms';
 import { DEMO_ACCOUNTS, DEMO_PIN } from '../src/seed/demo-accounts';
 import { seedDemo } from '../src/seed/demo';
 import { setupTestApp, type TestContext } from './helpers';
@@ -683,50 +682,42 @@ describe('guardian: home summary and unread badges', () => {
 });
 
 describe('demo data', () => {
-  it('seeds announcements and calendar events so the demo guardian opens with unread badges', async () => {
+  it('the demo guardian opens the home with badges, targeted announcements and the calendar', async () => {
     const handle = await connectPglite(null);
     try {
       await handle.migrate();
-      const demoToday = todayIn('Africa/Khartoum');
-      await seedDemo(handle.db, { today: demoToday });
-      await seedCommsDemo(handle.db, { today: demoToday });
-      await seedCommsDemo(handle.db, { today: demoToday }); // idempotent
-
-      const schools = await handle.db.select().from(s.schools);
-      for (const school of schools) {
-        const anns = await handle.db.select().from(s.announcements).where(eq(s.announcements.schoolId, school.id));
-        const events = await handle.db.select().from(s.calendarEvents).where(eq(s.calendarEvents.schoolId, school.id));
-        expect(anns).toHaveLength(5);
-        expect(new Set(anns.map((a) => a.audienceType))).toEqual(
-          new Set(['school', 'grade_level', 'class_section', 'student']),
-        );
-        expect(events.length).toBeGreaterThanOrEqual(7);
-      }
-
+      await seedDemo(handle.db, { today: todayIn('Africa/Khartoum') });
       const app = createApp({ db: handle.db, config: { ...t.config } });
       const agent = request.agent(app);
       const phone = DEMO_ACCOUNTS.find((a) => a.role === 'guardian')!.phone;
       expect((await agent.post('/api/auth/login').send({ phone, pin: DEMO_PIN })).status).toBe(200);
-      const me = await agent.get('/api/me');
-      const children = me.body.children as Array<{ id: string }>;
+      const children = (await agent.get('/api/me')).body.children as Array<{ id: string; fullName: string }>;
       expect(children.length).toBeGreaterThan(0);
+
+      let unread = 0;
       const personal: string[] = [];
       for (const child of children) {
-        const res = await agent.get(`/api/students/${child.id}/summary`);
-        expect(res.status).toBe(200);
-        expect(res.body.badges.announcements).toBeGreaterThan(0);
-        expect(res.body.badges.calendar).toBeGreaterThan(0);
+        const summary = await agent.get(`/api/students/${child.id}/summary`);
+        expect(summary.status).toBe(200);
+        expect(Object.keys(summary.body.badges).sort()).toEqual([...BADGE_MODULES].sort());
+        unread += Object.values(summary.body.badges as Record<string, number>).reduce((a, b) => a + b, 0);
+
         const news = await agent.get(`/api/students/${child.id}/announcements`);
-        personal.push(
-          ...news.body
-            .filter((a: { audienceType: string }) => a.audienceType === 'student')
-            .map((a: { id: string }) => a.id),
-        );
+        expect(news.status).toBe(200);
+        expect(news.body.length).toBeGreaterThan(0);
+        for (const a of news.body as Array<{ audienceType: string; audienceLabel: string }>) {
+          if (a.audienceType === 'student') {
+            expect(a.audienceLabel).toBe(`إعلان خاص لـ ولي أمر الطالب ${child.fullName}`);
+            personal.push(child.id);
+          }
+        }
+
         const cal = await agent.get(`/api/students/${child.id}/calendar`);
+        expect(cal.status).toBe(200);
         expect(cal.body.events.length + cal.body.upcoming.length).toBeGreaterThan(0);
       }
-      // Each demo school sends one personal message to the demo guardian.
-      expect(personal).toHaveLength(schools.length);
+      expect(unread).toBeGreaterThan(0);
+      expect(personal.length).toBeGreaterThan(0);
     } finally {
       await handle.close();
     }

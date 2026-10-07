@@ -580,9 +580,7 @@ describe('student guardians', () => {
     expect((await adminB.post(url(`/${t.fx.students.s3.id}/guardians`)).send(body)).status).toBe(403);
     expect((await guardian.post(url(`/${t.fx.students.s1.id}/guardians`)).send(body)).status).toBe(403);
     expect((await admin.post(url(`/${t.fx.students.s4.id}/guardians`)).send(body)).status).toBe(404);
-    expect(
-      (await adminB.delete(url(`/${t.fx.students.s1.id}/guardians/${t.fx.users.guardian.id}`))).status,
-    ).toBe(403);
+    expect((await adminB.delete(url(`/${t.fx.students.s1.id}/guardians/${t.fx.users.guardian.id}`))).status).toBe(403);
   });
 });
 
@@ -609,7 +607,12 @@ describe('POST /students/import', () => {
         row({ studentFirstName: '', gender: 'ولد؟', gradeLevel: 'الصف العاشر', guardianPhone: '12' }),
         row({ classSection: 'ج', relation: 'جار', birthDate: '2015-13-40' }),
         row(),
-        row({ studentFirstName: 'مصعب', studentFatherName: 'إبراهيم', studentGrandfatherName: 'عبدالله', guardianPhone: t.fx.users.guardian.phone }),
+        row({
+          studentFirstName: 'مصعب',
+          studentFatherName: 'إبراهيم',
+          studentGrandfatherName: 'عبدالله',
+          guardianPhone: t.fx.users.guardian.phone,
+        }),
       ],
     });
     expect(res.status).toBe(200);
@@ -647,7 +650,13 @@ describe('POST /students/import', () => {
     const rows = [
       row(),
       // Same guardian (phone written differently): one account, one code.
-      row({ studentFirstName: 'مريم', gender: 'أنثى', classSection: '', guardianPhone: '+249917000001', birthDate: '' }),
+      row({
+        studentFirstName: 'مريم',
+        gender: 'أنثى',
+        classSection: '',
+        guardianPhone: '+249917000001',
+        birthDate: '',
+      }),
       // Grade and section in one column, English values, existing active account.
       row({
         studentFirstName: 'عمر',
@@ -781,7 +790,9 @@ describe('GET /guardians and activation codes', () => {
     expect((await adminB.get(guardiansUrl())).status).toBe(403);
     expect((await adminB.post(guardiansUrl(`/${t.fx.users.guardian2.id}/activation-code`))).status).toBe(403);
     // School B's admin cannot reach school A's guardians through school B either.
-    const viaB = await adminB.post(`/api/schools/${t.fx.schoolB.id}/guardians/${t.fx.users.guardian2.id}/activation-code`);
+    const viaB = await adminB.post(
+      `/api/schools/${t.fx.schoolB.id}/guardians/${t.fx.users.guardian2.id}/activation-code`,
+    );
     expect(viaB.status).toBe(404);
   });
 });

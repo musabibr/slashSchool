@@ -70,6 +70,8 @@ export function createApp({ db, config, logger }: AppDeps): Express {
     );
   }
   app.use(cookieParser());
+  // CSV imports (up to 2,000 rows) are larger than ordinary requests.
+  app.use('/api/schools/:schoolId/students/import', express.json({ limit: '4mb' }));
   app.use('/api', express.json({ limit: '1mb' }));
   app.use('/api', resolveSession(db));
 

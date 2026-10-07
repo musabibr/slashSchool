@@ -2,7 +2,6 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { and, eq } from 'drizzle-orm';
 import { addDays, formatMoney, todayIn } from '@slash/shared';
 import * as s from '../src/db/schema';
-import { seedFeesDemo } from '../src/modules/fees/demo';
 import { setupTestApp, type TestContext } from './helpers';
 
 let t: TestContext;
@@ -584,33 +583,5 @@ describe('plan deletion', () => {
     expect(res.status).toBe(200);
     expect(await studentFeeId(t.fx.students.s5.id, created.body.id)).toBeUndefined();
     expect((await agent.delete(`${base()}/plans/${created.body.id}`)).status).toBe(404);
-  });
-});
-
-describe('demo data', () => {
-  let d: TestContext;
-  beforeAll(async () => {
-    d = await setupTestApp();
-  });
-  afterAll(() => d.close());
-
-  it('seeds one plan per grade level with a mix of paid and late accounts, once', async () => {
-    const day = todayIn(d.fx.schoolA.timezone);
-    await seedFeesDemo(d.db, { today: day });
-    await seedFeesDemo(d.db, { today: day });
-    const agent = await d.loginAs(d.fx.users.admin.phone);
-    const plans = (await agent.get(`/api/schools/${d.fx.schoolA.id}/fees/plans`)).body;
-    expect(
-      plans.map((p: { name: string; total: number; studentCount: number }) => [p.name, p.total, p.studentCount]),
-    ).toEqual([
-      ['رسوم الصف الخامس', 600_000, 4],
-      ['رسوم الصف السادس', 600_000, 0],
-    ]);
-    const overview = (await agent.get(`/api/schools/${d.fx.schoolA.id}/fees/overview`)).body;
-    expect(overview.collected).toBeGreaterThan(0);
-    expect(overview.studentsWithArrears).toBeGreaterThan(0);
-    const guardian = await d.loginAs(d.fx.users.guardian.phone);
-    const p9 = (await guardian.get(`/api/students/${d.fx.students.s1.id}/fees`)).body;
-    expect(p9.totals).toMatchObject({ total: 600_000, paid: 400_000, remaining: 200_000, overdue: 50_000 });
   });
 });

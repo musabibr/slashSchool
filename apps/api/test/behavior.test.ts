@@ -1,13 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import request from 'supertest';
 import { and, eq } from 'drizzle-orm';
 import { addDays, todayIn } from '@slash/shared';
-import { createApp } from '../src/app';
-import { connectPglite } from '../src/db/client';
 import * as s from '../src/db/schema';
-import { seedBehaviorDemo } from '../src/modules/behavior/demo';
-import { seedDemo } from '../src/seed/demo';
-import { DEMO_ACCOUNTS, DEMO_PIN } from '../src/seed/demo-accounts';
 import { setupTestApp, type TestContext } from './helpers';
 
 let t: TestContext;
@@ -565,39 +559,4 @@ describe('guardian behavior screen (P14)', () => {
       .returning();
     expect((await teacher.get(url(outside.id))).status).toBe(403);
   });
-});
-
-// ───────────────────────────── Demo data ─────────────────────────────
-
-describe('demo data', () => {
-  it('prefills regulations, incidents and evaluations for the demo accounts (idempotent)', async () => {
-    const handle = await connectPglite(null);
-    try {
-      await handle.migrate();
-      const demoToday = '2025-11-12';
-      await seedDemo(handle.db, { today: demoToday });
-      await seedBehaviorDemo(handle.db, { today: demoToday });
-      await seedBehaviorDemo(handle.db, { today: demoToday });
-
-      const regs = await handle.db.select().from(s.regulations);
-      expect(regs).toHaveLength(16);
-      expect((await handle.db.select().from(s.evaluations)).length).toBeGreaterThan(0);
-
-      const app = createApp({ db: handle.db, config: { ...t.config } });
-      const guardian = request.agent(app);
-      const phone = DEMO_ACCOUNTS.find((a) => a.role === 'guardian')!.phone;
-      expect((await guardian.post('/api/auth/login').send({ phone, pin: DEMO_PIN })).status).toBe(200);
-      const me = await guardian.get('/api/me');
-      const child = me.body.children.find((c: { fullName: string }) => c.fullName.startsWith('مصعب'));
-      const res = await guardian.get(`/api/students/${child.id}/behavior`);
-      expect(res.status).toBe(200);
-      expect(res.body.violations).toBe(3);
-      expect(res.body.penalties).toBe(2);
-      expect(res.body.incidents.every((i: { date: string }) => i.date < demoToday)).toBe(true);
-      expect(res.body.evaluations.length).toBeGreaterThan(0);
-      expect(res.body.evaluations[0].teacherName).toBeTruthy();
-    } finally {
-      await handle.close();
-    }
-  }, 60_000);
 });

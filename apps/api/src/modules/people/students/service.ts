@@ -229,9 +229,7 @@ export async function codeIssuers(db: Db, schoolId: string, userIds: string[]): 
     .select({ userId: memberships.userId, schoolId: memberships.schoolId, role: memberships.role })
     .from(memberships)
     .where(inArray(memberships.userId, ids));
-  const blocked = new Set(
-    rows.filter((m) => m.schoolId !== schoolId || m.role === 'admin').map((m) => m.userId),
-  );
+  const blocked = new Set(rows.filter((m) => m.schoolId !== schoolId || m.role === 'admin').map((m) => m.userId));
   return new Set(ids.filter((id) => !blocked.has(id)));
 }
 
@@ -288,7 +286,9 @@ export function chunks<T>(items: T[], size: number): T[][] {
 export const classGrade = alias(gradeLevels, 'class_grade');
 
 /** "الصف الخامس - ب" from the class's own grade level. */
-export const classLabelSql = sql<string | null>`case when ${classSections.id} is null then null else ${classGrade.name} || ' - ' || ${classSections.name} end`;
+export const classLabelSql = sql<
+  string | null
+>`case when ${classSections.id} is null then null else ${classGrade.name} || ' - ' || ${classSections.name} end`;
 
 /** Numeric part of the code, for ordering S-2 before S-10. */
 const codeNumberSql = sql`coalesce(substring(${students.code} from '[0-9]+$')::bigint, 0)`;

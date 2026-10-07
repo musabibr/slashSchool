@@ -33,7 +33,10 @@ export const optionalPhone = (v: string) => (!v.trim() || isValidPhone(v) ? null
 /** Form validator for a required phone. */
 export const requiredPhone = (v: string) =>
   !v.trim() ? 'رقم الهاتف مطلوب' : isValidPhone(v) ? null : 'رقم الهاتف غير صالح';
-export const required = (message = 'هذا الحقل مطلوب') => (v: string | null) => (v && v.trim() ? null : message);
+export const required =
+  (message = 'هذا الحقل مطلوب') =>
+  (v: string | null) =>
+    v && v.trim() ? null : message;
 
 /** '' → null, otherwise trimmed. */
 export const orNull = (v: string) => v.trim() || null;
@@ -49,7 +52,12 @@ export function activationUrl(code: string): string {
 }
 
 /** WhatsApp text that goes with a guardian's activation code. */
-export function activationMessage(opts: { guardianName: string; students: string[]; schoolName: string; code: string }) {
+export function activationMessage(opts: {
+  guardianName: string;
+  students: string[];
+  schoolName: string;
+  code: string;
+}) {
   const students = joinArabicList(opts.students) || 'أبنائكم';
   return `مرحباً ${opts.guardianName}، تم تسجيل ${students} في ${opts.schoolName}. رمز تفعيل تطبيق سلاش سكول: ${opts.code} — للتفعيل افتح ${activationUrl(opts.code)}`;
 }

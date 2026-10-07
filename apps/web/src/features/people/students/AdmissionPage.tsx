@@ -144,7 +144,9 @@ function initialValues(structure: SchoolStructure, today: string | null, profile
     greatGrandfatherName: profile?.greatGrandfatherName ?? '',
     gender: profile?.gender ?? null,
     birthDate: profile?.birthDate ?? null,
-    stageId: stageOfGrade(structure, profile?.gradeLevelId ?? null) ?? (structure.stages.length === 1 ? structure.stages[0].id : null),
+    stageId:
+      stageOfGrade(structure, profile?.gradeLevelId ?? null) ??
+      (structure.stages.length === 1 ? structure.stages[0].id : null),
     gradeLevelId: profile?.gradeLevelId ?? null,
     classSectionId: profile?.classSectionId ?? null,
     registeredAt: profile?.registeredAt ?? today,
@@ -199,13 +201,7 @@ function NameParts({
       </Text>
       <SimpleGrid cols={{ base: 2, sm: fields.length }} spacing="xs">
         {fields.map((f, i) => (
-          <TextInput
-            key={f}
-            label={labels[i]}
-            required={i < requiredCount}
-            maxLength={60}
-            {...form.getInputProps(f)}
-          />
+          <TextInput key={f} label={labels[i]} required={i < requiredCount} maxLength={60} {...form.getInputProps(f)} />
         ))}
       </SimpleGrid>
     </div>
@@ -349,7 +345,13 @@ function AdmissionForm({
     if (primary) {
       const patch: GuardianLinkPatch = {};
       if (values.relation !== primary.relation) patch.relation = values.relation;
-      const text = { whatsapp: values.gWhatsapp, occupation: values.occupation, workplace: values.workplace, locality: values.locality, residence: values.residence };
+      const text = {
+        whatsapp: values.gWhatsapp,
+        occupation: values.occupation,
+        workplace: values.workplace,
+        locality: values.locality,
+        residence: values.residence,
+      };
       for (const [k, val] of Object.entries(text) as Array<[keyof typeof text, string]>) {
         if (orNull(val) !== (primary[k] ?? null)) patch[k] = orNull(val);
       }
@@ -701,7 +703,9 @@ export function AdmissionPage() {
           {(s) =>
             editing ? (
               <QueryState query={profile}>
-                {(p) => <AdmissionForm schoolId={schoolId} structure={s} today={today} profile={p} onCreated={setResult} />}
+                {(p) => (
+                  <AdmissionForm schoolId={schoolId} structure={s} today={today} profile={p} onCreated={setResult} />
+                )}
               </QueryState>
             ) : (
               <AdmissionForm key={formKey} schoolId={schoolId} structure={s} today={today} onCreated={setResult} />

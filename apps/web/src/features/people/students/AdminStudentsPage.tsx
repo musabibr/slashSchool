@@ -1,5 +1,17 @@
 import { useMemo, useState } from 'react';
-import { Badge, Button, Group, Pagination, Paper, Select, Stack, Table, Text, TextInput } from '@mantine/core';
+import {
+  Badge,
+  Button,
+  Group,
+  Pagination,
+  Paper,
+  Select,
+  SimpleGrid,
+  Stack,
+  Table,
+  Text,
+  TextInput,
+} from '@mantine/core';
 import { useDebouncedCallback } from '@mantine/hooks';
 import { IconFileImport, IconSearch, IconUserPlus } from '@tabler/icons-react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
@@ -91,7 +103,7 @@ export function AdminStudentsPage() {
     >
       <Paper withBorder radius="md" p="md">
         <Stack gap="md">
-          <Group grow align="flex-end" gap="sm" wrap="wrap">
+          <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
             <Select
               label="الصف"
               placeholder="إختر الصف"
@@ -101,7 +113,6 @@ export function AdminStudentsPage() {
               clearable
               searchable
               nothingFoundMessage="لا توجد نتائج"
-              miw={200}
             />
             <TextInput
               label="بحث"
@@ -112,7 +123,6 @@ export function AdminStudentsPage() {
                 setSearch(e.currentTarget.value);
                 syncSearch(e.currentTarget.value);
               }}
-              miw={220}
             />
             <Select
               label="الحالة"
@@ -121,13 +131,14 @@ export function AdminStudentsPage() {
               value={status}
               onChange={(v) => update({ status: v, page: null })}
               clearable
-              miw={160}
             />
-          </Group>
+          </SimpleGrid>
 
           <QueryState
             query={list}
-            empty={filtered ? 'لا يوجد طلاب مطابقون للبحث' : 'لا يوجد طلاب مسجلون بعد — ابدأ بتسجيل طالب جديد أو استيراد ملف'}
+            empty={
+              filtered ? 'لا يوجد طلاب مطابقون للبحث' : 'لا يوجد طلاب مسجلون بعد — ابدأ بتسجيل طالب جديد أو استيراد ملف'
+            }
             isEmpty={(d) => d.items.length === 0}
           >
             {(data) => (

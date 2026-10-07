@@ -13,7 +13,7 @@ export interface IssuedCode {
 
 /** The message sent with the code (WhatsApp share / copy). */
 export function activationMessage(fullName: string, schoolName: string, code: string): string {
-  return `مرحباً ${fullName}، تم إنشاء حسابك في سلاش سكول (${schoolName}). رمز التفعيل: ${code} — للتفعيل افتح ${window.location.origin}/activate`;
+  return `مرحباً ${fullName}، تم إنشاء حسابك في سلاش سكول (${schoolName}). رمز التفعيل: ${code} — للتفعيل افتح ${window.location.origin}/activate?code=${encodeURIComponent(code)}`;
 }
 
 /** Shows a freshly issued activation code once, with copy and WhatsApp share buttons. */

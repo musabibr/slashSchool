@@ -372,7 +372,8 @@ export async function executeImport(
     actorId,
   );
   const childrenByPhone = new Map<string, string[]>();
-  for (const r of withCodes) childrenByPhone.set(r.guardianPhone, [...(childrenByPhone.get(r.guardianPhone) ?? []), studentFullName(r)]);
+  for (const r of withCodes)
+    childrenByPhone.set(r.guardianPhone, [...(childrenByPhone.get(r.guardianPhone) ?? []), studentFullName(r)]);
   const codes: ImportCode[] = pending.map((u) => ({
     guardianName: u.fullName,
     phone: u.phone,
