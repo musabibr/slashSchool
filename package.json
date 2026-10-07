@@ -1,0 +1,27 @@
+{
+  "name": "slashschool",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Slash School — school-to-home platform (MVP)",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c blue,magenta \"npm run dev -w @slash/api\" \"npm run dev -w @slash/web\"",
+    "build": "npm run build -w @slash/web && npm run build -w @slash/api",
+    "start": "node apps/api/dist/index.js",
+    "test": "npm run test -w @slash/shared && npm run test -w @slash/api",
+    "typecheck": "npm run typecheck -w @slash/shared && npm run typecheck -w @slash/api && npm run typecheck -w @slash/web",
+    "db:generate": "npm run db:generate -w @slash/api",
+    "seed": "npm run seed -w @slash/api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "typescript": "~5.9.3"
+  }
+}

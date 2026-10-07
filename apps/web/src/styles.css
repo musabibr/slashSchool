@@ -1,0 +1,21 @@
+:root {
+  --app-mobile-width: 480px;
+}
+
+body {
+  background: var(--mantine-color-gray-1);
+}
+
+/* Mobile screens are centred in a phone-width column on larger displays. */
+.mobile-frame {
+  max-width: var(--app-mobile-width);
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: var(--mantine-color-body);
+  box-shadow: 0 0 0 1px var(--mantine-color-gray-2);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
