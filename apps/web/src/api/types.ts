@@ -79,5 +79,6 @@ export interface PublicConfig {
     pin: string;
     accounts: Array<{ role: Role; label: string; phone: string; fullName: string }>;
     activation: { code: string; phone: string; fullName: string };
+    linkCode: string;
   } | null;
 }

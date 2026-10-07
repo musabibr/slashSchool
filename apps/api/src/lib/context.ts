@@ -2,7 +2,15 @@ import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { and, eq, inArray } from 'drizzle-orm';
 import { DEFAULT_GRADE_BANDS, joinName, STAFF_ROLES, todayIn, type GradeBand, type Role } from '@slash/shared';
 import type { Db } from '../db/client';
-import { classSections, gradeLevels, memberships, schools, studentGuardians, students, teachingAssignments } from '../db/schema';
+import {
+  classSections,
+  gradeLevels,
+  memberships,
+  schools,
+  studentGuardians,
+  students,
+  teachingAssignments,
+} from '../db/schema';
 import { forbidden, notFound, unauthorized } from './errors';
 
 export interface AuthUser {
@@ -163,7 +171,10 @@ export function studentScope(db: Db): RequestHandler {
         .select({ id: teachingAssignments.id })
         .from(teachingAssignments)
         .where(
-          and(eq(teachingAssignments.teacherId, user.id), eq(teachingAssignments.classSectionId, student.classSectionId)),
+          and(
+            eq(teachingAssignments.teacherId, user.id),
+            eq(teachingAssignments.classSectionId, student.classSectionId),
+          ),
         );
       if (teaches) access = 'staff';
     }

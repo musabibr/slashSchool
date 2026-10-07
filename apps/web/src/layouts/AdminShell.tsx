@@ -93,7 +93,13 @@ export function AdminShell() {
             >
               تبديل
             </Button>
-            <Button size="xs" variant="subtle" color="red" leftSection={<IconLogout size={14} />} onClick={() => logout.mutate()}>
+            <Button
+              size="xs"
+              variant="subtle"
+              color="red"
+              leftSection={<IconLogout size={14} />}
+              onClick={() => logout.mutate()}
+            >
               خروج
             </Button>
           </Group>

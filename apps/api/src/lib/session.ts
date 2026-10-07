@@ -11,7 +11,9 @@ const TOUCH_INTERVAL_MS = 10 * 60_000;
 export async function createSession(db: Db, userId: string, userAgent: string | undefined) {
   const token = randomToken();
   const expiresAt = new Date(Date.now() + SESSION_TTL_DAYS * 86_400_000);
-  await db.insert(sessions).values({ userId, tokenHash: sha256(token), expiresAt, userAgent: userAgent?.slice(0, 300) });
+  await db
+    .insert(sessions)
+    .values({ userId, tokenHash: sha256(token), expiresAt, userAgent: userAgent?.slice(0, 300) });
   return { token, expiresAt };
 }
 

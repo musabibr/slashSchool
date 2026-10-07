@@ -3,7 +3,7 @@ import rateLimit from 'express-rate-limit';
 import type { Config } from '../config';
 import type { Db } from '../db/client';
 import { HttpError } from '../lib/errors';
-import { DEMO_ACCOUNTS, DEMO_ACTIVATION, DEMO_PIN } from '../seed/demo-accounts';
+import { DEMO_ACCOUNTS, DEMO_ACTIVATION, DEMO_LINK_CODE, DEMO_PIN } from '../seed/demo-accounts';
 import { seedDemo } from '../seed/demo';
 import { resetDatabase } from '../seed/reset';
 
@@ -15,7 +15,7 @@ export function publicRouter(db: Db, config: Config) {
     res.json({
       demoMode: config.demoMode,
       demo: config.demoMode
-        ? { pin: DEMO_PIN, accounts: DEMO_ACCOUNTS, activation: DEMO_ACTIVATION }
+        ? { pin: DEMO_PIN, accounts: DEMO_ACCOUNTS, activation: DEMO_ACTIVATION, linkCode: DEMO_LINK_CODE }
         : null,
     });
   });

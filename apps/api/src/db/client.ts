@@ -19,7 +19,11 @@ export interface DbHandle {
 function migrationsFolder(): string {
   const here = path.dirname(fileURLToPath(import.meta.url));
   // src/db/client.ts → ../../drizzle ; dist/index.js → ../drizzle
-  const candidates = [process.env.MIGRATIONS_DIR, path.resolve(here, '../drizzle'), path.resolve(here, '../../drizzle')];
+  const candidates = [
+    process.env.MIGRATIONS_DIR,
+    path.resolve(here, '../drizzle'),
+    path.resolve(here, '../../drizzle'),
+  ];
   const found = candidates.find((c) => c && fs.existsSync(path.join(c, 'meta/_journal.json')));
   if (!found) throw new Error('Migrations folder not found');
   return found;

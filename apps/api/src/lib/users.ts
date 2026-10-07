@@ -37,6 +37,9 @@ export async function issueActivationCode(db: Db, userId: string, createdBy: str
 /** Issues a fresh student link code (the "+" on P2). Returns the plaintext code once. */
 export async function issueStudentLinkCode(db: Db, studentId: string) {
   const code = generateCode();
-  await db.update(students).set({ linkCodeHash: hashCode(code) }).where(eq(students.id, studentId));
+  await db
+    .update(students)
+    .set({ linkCodeHash: hashCode(code) })
+    .where(eq(students.id, studentId));
   return { code };
 }

@@ -87,7 +87,9 @@ export function ActivatePage() {
                 </Text>
               </Paper>
               <Text size="sm">
-                {preview.alreadyActive ? 'اختر رقماً سرياً جديداً لحسابك.' : 'اختر رقماً سرياً من 4 إلى 6 أرقام لتسجيل الدخول لاحقاً.'}
+                {preview.alreadyActive
+                  ? 'اختر رقماً سرياً جديداً لحسابك.'
+                  : 'اختر رقماً سرياً من 4 إلى 6 أرقام لتسجيل الدخول لاحقاً.'}
               </Text>
               <PasswordInput
                 label="الرقم السري"

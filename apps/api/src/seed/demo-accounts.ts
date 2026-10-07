@@ -11,6 +11,9 @@ export const DEMO_ACCOUNTS = [
 /** A guardian who has not activated yet — to try the activation-code flow. */
 export const DEMO_ACTIVATION = { code: 'DEMO-2025-AB', phone: '0911111111', fullName: 'عوض محمد أحمد' } as const;
 
+/** Link code for a demo student not yet linked to the demo guardian — try the "+" on the child picker. */
+export const DEMO_LINK_CODE = 'DEMO-LINK-01';
+
 export const DEMO_SCHOOLS = {
   middle: { code: 'SCHOOL_A_001', name: 'مدرسة أولاد عمار المتوسطة' },
   secondary: { code: 'SCHOOL_A_002', name: 'مدرسة أولاد عمار الثانوية' },

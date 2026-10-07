@@ -162,7 +162,10 @@ export function meRouter(db: Db) {
   r.post('/children/link', async (req, res) => {
     const me = userOf(req);
     const { code } = parse(z.object({ code: z.string().min(4).max(40) }), req.body);
-    const [student] = await db.select().from(students).where(eq(students.linkCodeHash, hashCode(code)));
+    const [student] = await db
+      .select()
+      .from(students)
+      .where(eq(students.linkCodeHash, hashCode(code)));
     if (!student) throw new HttpError(400, 'invalid_code', 'رمز الطالب غير صحيح');
     const [existing] = await db
       .select({ id: studentGuardians.id })
@@ -190,7 +193,10 @@ export function meRouter(db: Db) {
     const { currentPin, newPin } = parse(z.object({ currentPin: z.string().min(1), newPin: zPin }), req.body);
     const [user] = await db.select().from(users).where(eq(users.id, me.id));
     if (!(await verifySecret(currentPin, user?.pinHash))) throw badRequest('الرقم السري الحالي غير صحيح');
-    await db.update(users).set({ pinHash: await hashSecret(newPin) }).where(eq(users.id, me.id));
+    await db
+      .update(users)
+      .set({ pinHash: await hashSecret(newPin) })
+      .where(eq(users.id, me.id));
     res.json({ ok: true });
   });
 

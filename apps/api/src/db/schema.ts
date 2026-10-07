@@ -237,10 +237,7 @@ export const students = pgTable(
     notes: text('notes'),
     createdAt: createdAt(),
   },
-  (t) => [
-    uniqueIndex('students_school_code').on(t.schoolId, t.code),
-    index('students_class').on(t.classSectionId),
-  ],
+  (t) => [uniqueIndex('students_school_code').on(t.schoolId, t.code), index('students_class').on(t.classSectionId)],
 );
 
 export const studentGuardians = pgTable(
@@ -421,10 +418,7 @@ export const assessments = pgTable(
     createdAt: createdAt(),
     updatedAt: ts('updated_at').notNull().defaultNow(),
   },
-  (t) => [
-    index('assessments_class_date').on(t.classSectionId, t.date),
-    index('assessments_period').on(t.examPeriodId),
-  ],
+  (t) => [index('assessments_class_date').on(t.classSectionId, t.date), index('assessments_period').on(t.examPeriodId)],
 );
 
 export const scores = pgTable(

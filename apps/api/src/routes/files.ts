@@ -18,7 +18,10 @@ export function fileUploadRouter(db: Db) {
   const r = Router({ mergeParams: true });
   r.post('/', express.raw({ type: () => true, limit: MAX_FILE_BYTES }), async (req, res) => {
     const school = schoolOf(req);
-    const mimeType = String(req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase();
+    const mimeType = String(req.headers['content-type'] ?? '')
+      .split(';')[0]
+      .trim()
+      .toLowerCase();
     if (!ALLOWED.test(mimeType)) throw badRequest('نوع الملف غير مدعوم (صور، PDF، صوت)');
     const body = req.body as Buffer;
     if (!Buffer.isBuffer(body) || body.length === 0) throw badRequest('الملف فارغ');

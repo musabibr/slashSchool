@@ -26,3 +26,16 @@ export async function markSeen(db: Db, userId: string, studentId: string, module
       set: { lastSeenAt: sql`now()` },
     });
 }
+
+/**
+ * Guardian list endpoints call this so the matching badge clears. Staff viewing a student
+ * (admin student profile) must not clear the guardian's badges, so it is a no-op for them.
+ */
+export async function markSeenIfGuardian(
+  db: Db,
+  req: { user?: { id: string }; student?: { id: string; access: 'guardian' | 'staff' } },
+  module: BadgeModule,
+  scope = '',
+) {
+  if (req.user && req.student?.access === 'guardian') await markSeen(db, req.user.id, req.student.id, module, scope);
+}

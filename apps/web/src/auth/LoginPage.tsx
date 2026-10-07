@@ -135,6 +135,10 @@ export function LoginPage() {
                 <Text span fw={700} dir="ltr">
                   {demo.activation.code}
                 </Text>
+                ، ولإضافة طالب (+) بعد الدخول كولي أمر استخدم{' '}
+                <Text span fw={700} dir="ltr">
+                  {demo.linkCode}
+                </Text>
               </Text>
               <Button
                 variant="subtle"

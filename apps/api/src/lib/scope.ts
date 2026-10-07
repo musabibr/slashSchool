@@ -103,7 +103,9 @@ export async function listScopeClasses(db: Db, req: Request): Promise<ScopeClass
       .where(eq(subjects.schoolId, school.id))
       .orderBy(asc(subjects.sort), asc(subjects.name));
     return classes.map((c) => {
-      const own = assignments.filter((a) => a.classSectionId === c.id).map((a) => ({ id: a.subjectId, name: a.subjectName }));
+      const own = assignments
+        .filter((a) => a.classSectionId === c.id)
+        .map((a) => ({ id: a.subjectId, name: a.subjectName }));
       return { ...c, subjects: own.length ? own : allSubjects };
     });
   }
