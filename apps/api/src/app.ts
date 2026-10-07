@@ -10,8 +10,7 @@ import type { Logger } from 'pino';
 import { sql } from 'drizzle-orm';
 import type { Config } from './config';
 import type { Db } from './db/client';
-import { classLabel, requireAuth, schoolOf, schoolScope, schoolToday, studentOf, studentScope } from './lib/context';
-import { BADGE_MODULES, type BadgeModule } from '@slash/shared';
+import { requireAuth, schoolScope, studentScope } from './lib/context';
 import { errorHandler, notFound } from './lib/errors';
 import { resolveSession } from './lib/session';
 import { registerModules } from './modules';
@@ -70,6 +69,8 @@ export function createApp({ db, config, logger }: AppDeps): Express {
     );
   }
   app.use(cookieParser());
+  // CSV imports (up to 2,000 rows) are larger than ordinary requests.
+  app.use('/api/schools/:schoolId/students/import', express.json({ limit: '4mb' }));
   app.use('/api', express.json({ limit: '1mb' }));
   app.use('/api', resolveSession(db));
 
@@ -87,23 +88,6 @@ export function createApp({ db, config, logger }: AppDeps): Express {
   school.use('/lookups', lookupsRouter(db));
   school.use('/files', fileUploadRouter(db));
   registerModules({ school, student }, { db, config });
-  // Fallback for the guardian home header. The comms module registers the full version (with unread
-  // badges) first, so this one only answers when that module is absent.
-  student.get('/summary', async (req, res) => {
-    const st = studentOf(req);
-    const sc = schoolOf(req);
-    res.json({
-      student: {
-        id: st.id,
-        fullName: st.fullName,
-        code: st.code,
-        classLabel: await classLabel(db, st.classSectionId),
-        status: st.status,
-      },
-      school: { id: sc.id, name: sc.name, today: schoolToday(sc) },
-      badges: Object.fromEntries(BADGE_MODULES.map((m) => [m, 0])) as Record<BadgeModule, number>,
-    });
-  });
   app.use('/api/schools/:schoolId', requireAuth, schoolScope(db), school);
   app.use('/api/students/:studentId', requireAuth, studentScope(db), student);
 

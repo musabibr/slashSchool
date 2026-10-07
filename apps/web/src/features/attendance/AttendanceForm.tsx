@@ -19,7 +19,7 @@ import { useScope } from '../../api/hooks';
 import { ClassSubjectSelect } from '../../components/ClassSubjectSelect';
 import { IsoDateInput } from '../../components/IsoDateInput';
 import { EmptyState, QueryState } from '../../components/States';
-import { dayjs } from '../../lib/dayjs';
+import { DATES_LOCALE, dayjs } from '../../lib/dayjs';
 import { notifyError, notifySuccess } from '../../lib/notify';
 import { useAttendanceSessions, useClassAttendance, useSaveAttendance, type ClassAttendance } from './api';
 import { dayLabel, type ClassDate } from './helpers';
@@ -55,6 +55,7 @@ export function AttendanceForm({
           schoolId={schoolId}
           classId={classId}
           withSubject={false}
+          autoSelect
           required
           onChange={(next) => onChange({ classId: next.classId, date })}
         />
@@ -212,7 +213,7 @@ function ChecklistEditor({ schoolId, data }: { schoolId: string; data: ClassAtte
             {data.updatedAt && (
               <Text size="xs" c="dimmed">
                 {data.recordedByName ? `${data.recordedByName} — ` : ''}
-                {dayjs(data.updatedAt).format('D/M/YYYY h:mm A')}
+                {dayjs(data.updatedAt).locale(DATES_LOCALE).format('D/M/YYYY h:mm A')}
               </Text>
             )}
           </Stack>

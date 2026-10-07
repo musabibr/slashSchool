@@ -1,3 +1,9 @@
+/**
+ * Bump when the demo dataset changes: in demo mode the server reloads the demo data on boot whenever the
+ * database was seeded with a different version (so a redeploy always shows the latest demo data).
+ */
+export const DEMO_SEED_VERSION = '3';
+
 /** Demo logins shown on the login page when DEMO_MODE=true. The demo seed creates exactly these. */
 export const DEMO_PIN = '1234';
 

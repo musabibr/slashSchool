@@ -1,7 +1,8 @@
 import { loadConfig } from '../config';
 import { connect } from '../db/client';
 import { seedDemo } from './demo';
-import { resetDatabase } from './reset';
+import { DEMO_SEED_VERSION } from './demo-accounts';
+import { resetDatabase, setDemoSeedVersion } from './reset';
 
 /** npm run seed — wipes the database and loads the demo dataset. */
 async function main() {
@@ -10,6 +11,7 @@ async function main() {
   await handle.migrate();
   await resetDatabase(handle.db);
   await seedDemo(handle.db);
+  await setDemoSeedVersion(handle.db, DEMO_SEED_VERSION);
   await handle.close();
   console.log('Demo data loaded.');
 }

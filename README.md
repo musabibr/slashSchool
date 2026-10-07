@@ -21,7 +21,31 @@ plus the web app) and one free Postgres database. Every push to the linked branc
    database migrations and, because `DEMO_MODE=true`, loads a demo dataset.
 4. Open the service URL. The login page lists one-click demo accounts.
 
-### Demo accounts
+### Demo data and logins
+
+No typing is needed: the login page shows one card per role. You can also share direct links,
+which log in on open:
+
+- `/demo/guardian`
+- `/demo/teacher`
+- `/demo/supervisor`
+- `/demo/admin`
+
+Inside the app, the yellow ⚗ button switches role or resets the demo data.
+
+The demo dataset is generated around today's date (Khartoum time):
+
+- **Schools:** two schools (أولاد عمار المتوسطة / الثانوية), 6 classes, 120 students,
+  16 teachers, and full weekly timetables.
+- **School life:** 15 school days of lessons and homework, about 40 days of attendance, published
+  term and monthly exam results, graded and upcoming quizzes, behavior incidents, teacher
+  evaluations, fee plans with payments and arrears, announcements, and calendar events.
+- **The sketch's guardian:** the demo guardian (إبراهيم عبدالله أحمد) has three children. مصعب's
+  fees and absences match the sketch.
+
+Each deploy reloads the latest demo dataset automatically.
+
+Phone and PIN, if you prefer to log in by hand:
 
 | Role | Phone | PIN |
 |---|---|---|

@@ -83,10 +83,18 @@ export function DemoSwitcher() {
   const reset = useDemoReset();
   if (!config.data?.demoMode) return null;
   return (
-    <Affix position={{ bottom: 88, left: 12 }} zIndex={300}>
-      <Menu position="top-start" shadow="md" withinPortal>
+    // `right` is the inline end in RTL: the physical left edge, away from checkboxes and primary actions.
+    <Affix position={{ bottom: 96, right: 10 }} zIndex={300}>
+      <Menu position="top-end" shadow="md" withinPortal>
         <Menu.Target>
-          <ActionIcon size={44} radius="xl" color="yellow" variant="filled" aria-label="تبديل الدور (تجريبي)">
+          <ActionIcon
+            size={40}
+            radius="xl"
+            color="yellow"
+            variant="filled"
+            aria-label="تبديل الدور (تجريبي)"
+            style={{ opacity: 0.9, boxShadow: 'var(--mantine-shadow-md)' }}
+          >
             {login.isPending || reset.isPending ? (
               <Loader size="xs" color="dark" />
             ) : (

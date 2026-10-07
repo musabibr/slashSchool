@@ -9,6 +9,7 @@
  *   await close(); await server.stop();
  *
  * Requires `npm run build` first. Roles: admin | supervisor | teacher | guardian | anon.
+ * Set E2E_DATABASE_URL to test against a real Postgres (it is reset to the demo dataset on boot).
  */
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
@@ -31,7 +32,16 @@ export const SHOTS_DIR = process.env.SHOTS_DIR ?? path.join(os.tmpdir(), 'slash-
 export async function startServer(port = 4300 + Math.floor(Math.random() * 500)) {
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'slash-e2e-'));
   const child = spawn(process.execPath, [path.join(root, 'apps/api/dist/index.js')], {
-    env: { ...process.env, PORT: String(port), PGLITE_DIR: dataDir, DEMO_MODE: 'true', NODE_ENV: 'development', LOG_LEVEL: 'warn', DATABASE_URL: '' },
+    // E2E_DATABASE_URL runs against a real Postgres (the production driver); otherwise a fresh PGlite.
+    env: {
+      ...process.env,
+      PORT: String(port),
+      PGLITE_DIR: dataDir,
+      DEMO_MODE: 'true',
+      NODE_ENV: 'development',
+      LOG_LEVEL: 'warn',
+      DATABASE_URL: process.env.E2E_DATABASE_URL ?? '',
+    },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   let log = '';
@@ -68,7 +78,8 @@ export async function openAs(server, role, viewport = { width: 390, height: 844 
     if (m.type() === 'error' && !/401 \(Unauthorized\)/.test(m.text())) errors.push(`console: ${m.text()}`);
   });
   page.on('response', (r) => {
-    if (r.url().includes('/api/') && r.status() >= 500) errors.push(`HTTP ${r.status()} ${r.request().method()} ${r.url()}`);
+    if (r.url().includes('/api/') && r.status() >= 500)
+      errors.push(`HTTP ${r.status()} ${r.request().method()} ${r.url()}`);
   });
   if (role !== 'anon') {
     const res = await context.request.post(`${server.url}/api/auth/login`, {

@@ -136,6 +136,7 @@ function LessonForm({ schoolId, lesson, today }: { schoolId: string; lesson?: St
               schoolId={schoolId}
               classId={form.values.classId}
               subjectId={form.values.subjectId}
+              autoSelect
               required
               onChange={({ classId, subjectId }) => {
                 form.setValues({ classId, subjectId });

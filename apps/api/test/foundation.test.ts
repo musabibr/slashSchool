@@ -197,3 +197,25 @@ describe('student summary', () => {
     expect((await adminB.get(`/api/students/${t.fx.students.s1.id}/summary`)).status).toBe(403);
   });
 });
+
+describe('demo data versioning', () => {
+  it('seeds an empty database, keeps a current one and reloads an outdated one', async () => {
+    const { connectPglite } = await import('../src/db/client');
+    const { ensureDemoData, getDemoSeedVersion } = await import('../src/seed/reset');
+    const h = await connectPglite(null);
+    await h.migrate();
+    let calls = 0;
+    const seed = async (db: typeof h.db) => {
+      calls++;
+      await db.insert(s.schools).values({ name: 'demo', code: `DEMO_${calls}` });
+    };
+    expect(await ensureDemoData(h.db, seed, '1')).toBe('seeded');
+    expect(await getDemoSeedVersion(h.db)).toBe('1');
+    expect(await ensureDemoData(h.db, seed, '1')).toBe('current');
+    expect(await ensureDemoData(h.db, seed, '2')).toBe('reseeded');
+    expect(calls).toBe(2);
+    const rows = await h.db.select().from(s.schools);
+    expect(rows.map((r) => r.code)).toEqual(['DEMO_2']);
+    await h.close();
+  });
+});
