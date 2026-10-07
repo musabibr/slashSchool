@@ -48,3 +48,32 @@ export async function isDatabaseEmpty(db: Db): Promise<boolean> {
   const rows = (result as unknown as { rows: Array<{ n: number }> }).rows;
   return Number(rows?.[0]?.n ?? 0) === 0;
 }
+
+const MARKER_PREFIX = 'slashschool-demo-seed:';
+
+/** Demo-seed version stored as a comment on the schools table (no extra table needed). */
+export async function getDemoSeedVersion(db: Db): Promise<string | null> {
+  const result = await db.execute(sql`select obj_description('schools'::regclass, 'pg_class') as c`);
+  const rows = (result as unknown as { rows: Array<{ c: string | null }> }).rows;
+  const comment = rows?.[0]?.c ?? null;
+  return comment?.startsWith(MARKER_PREFIX) ? comment.slice(MARKER_PREFIX.length) : null;
+}
+
+export async function setDemoSeedVersion(db: Db, version: string) {
+  if (!/^[\w.-]+$/.test(version)) throw new Error('invalid demo seed version');
+  await db.execute(sql.raw(`COMMENT ON TABLE schools IS '${MARKER_PREFIX}${version}'`));
+}
+
+/** Demo mode boot: load the demo data into an empty database, or reload it when the demo dataset changed. */
+export async function ensureDemoData(
+  db: Db,
+  seed: (db: Db) => Promise<void>,
+  version: string,
+): Promise<'seeded' | 'reseeded' | 'current'> {
+  const empty = await isDatabaseEmpty(db);
+  if (!empty && (await getDemoSeedVersion(db)) === version) return 'current';
+  if (!empty) await resetDatabase(db);
+  await seed(db);
+  await setDemoSeedVersion(db, version);
+  return empty ? 'seeded' : 'reseeded';
+}

@@ -8,9 +8,9 @@ import { users } from '../db/schema';
 import { HttpError } from '../lib/errors';
 import { createSession, setSessionCookie } from '../lib/session';
 import { parse } from '../lib/validate';
-import { DEMO_ACCOUNTS, DEMO_ACTIVATION, DEMO_LINK_CODE, DEMO_PIN } from '../seed/demo-accounts';
+import { DEMO_ACCOUNTS, DEMO_ACTIVATION, DEMO_LINK_CODE, DEMO_PIN, DEMO_SEED_VERSION } from '../seed/demo-accounts';
 import { seedDemo } from '../seed/demo';
-import { resetDatabase } from '../seed/reset';
+import { resetDatabase, setDemoSeedVersion } from '../seed/reset';
 
 export function publicRouter(db: Db, config: Config) {
   const r = Router();
@@ -50,6 +50,7 @@ export function publicRouter(db: Db, config: Config) {
       if (!config.demoMode) throw new HttpError(404, 'not_found', 'غير متاح');
       await resetDatabase(db);
       await seedDemo(db);
+      await setDemoSeedVersion(db, DEMO_SEED_VERSION);
       res.json({ ok: true });
     },
   );
