@@ -132,23 +132,21 @@ These don't block anything, but each one points to a rule the system needs.
 13. Typos: "Choose Stuednt", "عدد القوبات" → العقوبات, "تقيم" → تقييم, "اصافة" → إضافة,
     "هادئي" → هادئ.
 
-## 6. Open questions for the product owner
+## 6. Decisions on the open questions
 
-1. **What is `#SCHOOL_A_001` on the login screen?** The architecture assumes a **per-person
-   activation code** issued by the school. The alternative is a school code followed by
-   credentials.
-2. Do **students log in themselves**, or only guardians? The homework "done" checkbox suggests
-   students use the app.
-3. Should **teachers** record absence and behavior, or only supervisors?
-4. Is the **student evaluation** (calm/disruptive + comment) visible to guardians? It isn't in
-   their menu.
-5. **Fees:** is manual payment recording enough, or is mobile payment (e.g., Bankak) expected?
-   Are there sibling discounts?
-6. What are the school's **grade bands** (ممتاز / جيد جداً / جيد / مقبول) thresholds?
-7. Is this **one school or many** (SaaS)? The architecture assumes many, with "أولاد عمار" as
-   the pilot.
-8. Who can **send announcements**: the director only, or supervisors too?
-9. What is a **supervisor's scope**: the whole school, or specific stages? 6 supervisors for
-   3,523 students suggests one per stage.
-10. **Exam timetables:** build them in the app (assumed), or keep uploading a photo or PDF?
-11. Which day does the **school week** start on, for the "this week" filter?
+These were open in the first draft. The product owner chose manual fee recording; the rest were
+decided on their behalf and are implemented in the MVP.
+
+| # | Question | Decision |
+|---|---|---|
+| 1 | What is the login code? | A **per-person activation code** issued by the school (shared by WhatsApp or on paper). After activation the user picks a 4–6 digit PIN. Later logins use **phone + PIN**. |
+| 2 | Do students log in? | Not in the MVP. **Guardians** hold the account, and the "تم" homework checkbox is ticked from the guardian app. The data model already allows student logins later. |
+| 3 | What can teachers do? | Lessons & homework, grades, quiz announcements, student evaluation, and viewing their own timetable, all limited to their assigned class × subject pairs. **Absence and behavior are recorded by supervisors and the director only**, matching the sketch menus. |
+| 4 | Is the student evaluation visible to guardians? | **Yes**, on the guardian's behavior screen. |
+| 5 | Fees | **Recorded by hand** (product owner's decision). Online payment comes later. Per-student discounts are supported. |
+| 6 | Grade bands | ≥ 90 ممتاز · ≥ 75 جيد جداً · ≥ 60 جيد · ≥ 50 مقبول · < 50 ضعيف. Each school can change them in settings. |
+| 7 | One school or many? | **Many schools** on one deployment. The demo has two (أولاد عمار المتوسطة / الثانوية). |
+| 8 | Who sends announcements? | **The director**, from the dashboard. The student page also has "message guardian" and "fee notice" actions. |
+| 9 | Supervisor scope | **The whole school.** |
+| 10 | Exam timetables | **Built in the app**, per grade level, one row per subject. |
+| 11 | School week | Starts **Sunday**. The weekend is Friday and Saturday. Each school can change this. |
